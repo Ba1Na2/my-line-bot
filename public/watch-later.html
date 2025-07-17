@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ร้านที่บันทึกไว้</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* CSS เพื่อให้หน้าเว็บดูสวยงามขึ้นใน LIFF */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            margin: 0;
+            padding: 16px;
+            background-color: #F0F4F8;
+            color: #333;
+        }
+        h1 {
+            color: #1a237e; /* สีน้ำเงินเข้ม */
+            margin-bottom: 24px;
+        }
+        .shop-card { 
+            background-color: #fff;
+            border: 1px solid #ddd; 
+            border-radius: 12px; 
+            margin-bottom: 16px; 
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+        .shop-card img { 
+            width: 100px; 
+            height: 100px; 
+            object-fit: cover;
+        }
+        .shop-card-body { 
+            padding: 16px;
+            flex-grow: 1;
+        }
+        .shop-card h3 { 
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        .shop-card p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .shop-card a {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 0.9em;
+            color: #3949ab;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        #status-message { 
+            text-align: center; 
+            padding: 2em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔖 ร้านที่บันทึกไว้ดูภายหลัง</h1>
+    <div id="status-message">กำลังโหลดข้อมูล...</div>
+    <div id="shop-list"></div>
+
+    <!-- LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <!-- Firebase SDK (สำหรับ Web) - ใช้เวอร์ชันที่ใหม่ขึ้นและมี modular imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // --- 1. ตั้งค่า Firebase สำหรับ Web ---
+        // *** สำคัญ: คัดลอกค่าเหล่านี้มาจาก Firebase Console > Project Settings > General > Your apps ***
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0YYQ20oVduEaVNtJNNnEd2YCufwaScMw",
+            authDomain: "linebot-mrt.firebaseapp.com",
+            projectId: "linebot-mrt",
+            storageBucket: "linebot-mrt.firebasestorage.app",
+            messagingSenderId: "363062225176",
+            appId: "1:363062225176:web:54a8666def4777a995966d",
+            measurementId: "G-YXH7T1DHBG"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- 2. ฟังก์ชันหลักของ LIFF ---
+        async function main() {
+            try {
+                // Initialize LIFF และรอให้พร้อม
+                await liff.init({ liffId: "2007704697-mv4GBn6P" });
+
+                if (!liff.isLoggedIn()) {
+                    document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อใช้งาน";
+                    // liff.login(); // สามารถบังคับให้ login ได้ถ้าต้องการ
+                    return;
+                }
+
+                const profile = await liff.getProfile();
+                const userId = profile.userId;
+
+                // สร้าง Reference ไปยัง Sub-collection 'watch_later' ของผู้ใช้
+                const watchLaterRef = collection(db, "users", userId, "watch_later");
+                const q = query(watchLaterRef, orderBy("addedAt", "desc")); // เรียงจากล่าสุดไปเก่าสุด
+                
+                const watchLaterSnapshot = await getDocs(q);
+                
+                if (watchLaterSnapshot.empty) {
+                    document.getElementById('status-message').innerText = "คุณยังไม่มีร้านค้าที่บันทึกไว้";
+                    return;
+                }
+                
+                document.getElementById('status-message').style.display = 'none';
+                const shopListDiv = document.getElementById('shop-list');
+                const apiKey = "AIzaSyA-qMFVMUCXryNUYj2WfBmA_en0ix19PAw"; 
+
+                // วนลูปเพื่อดึงข้อมูลร้านค้าทีละร้าน
+                for (const docSnapshot of watchLaterSnapshot.docs) {
+                    const shopId = docSnapshot.id;
+                    const shopRef = doc(db, "shops", shopId); // Reference ไปยังร้านค้าใน Collection 'shops'
+                    const shopDoc = await getDoc(shopRef);
+
+                    if (shopDoc.exists()) {
+                        const shopData = shopDoc.data();
+                        
+                        let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+                        // หมายเหตุ: โค้ดส่วนดึงรูปจริงจาก Google ยังไม่ได้ใส่ไว้ในเวอร์ชันนี้เพื่อความง่าย
+                        // เราจะใช้ข้อมูล name, address ที่แคชไว้ก่อน
+
+                        const card = document.createElement('div');
+                        card.className = 'shop-card';
+                        card.innerHTML = `
+                            <img src="${imageUrl}" alt="${shopData.name}">
+                            <div class="shop-card-body">
+                                <h3>${shopData.name}</h3>
+                                <p>${shopData.address}</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopId}" target="_blank">เปิดใน Google Maps</a>
+                            </div>
+                        `;
+                        shopListDiv.appendChild(card);
+                    } else {
+                        console.warn(`Shop with ID ${shopId} not found in 'shops' collection.`);
+                    }
+                }
+            } catch (error) {
+                console.error('An error occurred in LIFF app:', error);
+                document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+            }
+        }
+        
+        main();
+    </script>
+</body>
+</html>

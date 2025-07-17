@@ -1,0 +1,12 @@
+# Node.js
+node_modules/
+.env
+
+# Firebase
+serviceAccountKey.json
+
+# OS
+.DS_Store
+npm-debug.log*
+
+package-lock.json
