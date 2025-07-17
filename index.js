@@ -29,6 +29,9 @@ const googleMapsClient = new Client({});
 // ----- Express App -----
 const app = express();
 
+// ทำให้ Express สามารถเสิร์ฟไฟล์ที่อยู่ในโฟลเดอร์ 'public' ได้
+app.use(express.static('public'));
+
 const MRT_BLUE_LINE_STATIONS = {
         "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
     "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
