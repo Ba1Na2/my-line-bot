@@ -150,7 +150,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                 contents: [
                     { type: 'button', style: 'link', height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
                     { type: 'button', style: 'primary', color: '#FF6B6B', height: 'sm', action: { type: 'postback', label: ' เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
-                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: ' บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
+                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: ' บันทึกไว้ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
                 ]
             }
         };
