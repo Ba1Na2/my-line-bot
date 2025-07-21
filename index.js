@@ -38,45 +38,44 @@ app.use(express.static('public'));
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
-    // ... (ใส่รายชื่อสถานี MRT ทั้งหมดของคุณที่นี่) ...
-    "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
-    "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
-    "สีลม": {"lat": 13.729908, "lng": 100.535898},
-    "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
-    "คลองเตย": {"lat": 13.723912, "lng": 100.556276},
-    "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587},
-    "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081},
-    "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919},
-    "พระราม 9": {"lat": 13.758031, "lng": 100.565439},
-    "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106},
-    "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633},
-    "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784},
-    "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647},
-    "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899},
-    "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144},
-    "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278},
-    "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481},
-    "บางซื่อ": {"lat": 13.803362, "lng": 100.535032},
-    "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, 
-    "บางโพ": {"lat": 13.811808, "lng": 100.521833},
-    "บางอ้อ": {"lat": 13.805565, "lng": 100.512686},
-    "บางพลัด": {"lat": 13.790588, "lng": 100.506541},
-    "สิรินธร": {"lat": 13.782017, "lng": 100.493922},
-    "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390},
-    "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085},
-    "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033},
-    "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724},
-    "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, 
-    "บางไผ่": {"lat": 13.734685, "lng": 100.468841},
-    "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, 
-    "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747},
-    "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440},
-    "บางแค": {"lat": 13.715367, "lng": 100.418041},
-    "หลักสอง": {"lat": 13.710784, "lng": 100.406103},
-    "วัดมังกร": {"lat": 13.743734, "lng": 100.509747},
-    "สามยอด": {"lat": 13.747199, "lng": 100.503276},
-    "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
-    "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
+    "หัวลำโพง": { lat: 13.739186, lng: 100.516893 },
+    "สามย่าน": { lat: 13.732952, lng: 100.529431 },
+    "สีลม": { lat: 13.729908, lng: 100.535898 },
+    "ลุมพินี": { lat: 13.729172, lng: 100.546305 },
+    "คลองเตย": { lat: 13.723912, lng: 100.556276 },
+    "ศูนย์การประชุมแห่งชาติสิริกิติ์": { lat: 13.722881, lng: 100.561587 },
+    "สุขุมวิท": { lat: 13.738012, lng: 100.561081 },
+    "เพชรบุรี": { lat: 13.750873, lng: 100.561919 },
+    "พระราม 9": { lat: 13.758031, lng: 100.565439 },
+    "ศูนย์วัฒนธรรมแห่งประเทศไทย": { lat: 13.765664, lng: 100.569106 },
+    "ห้วยขวาง": { lat: 13.778844, lng: 100.574633 },
+    "สุทธิสาร": { lat: 13.789233, lng: 100.574784 },
+    "รัชดาภิเษก": { lat: 13.797274, lng: 100.575647 },
+    "ลาดพร้าว": { lat: 13.806659, lng: 100.576899 },
+    "พหลโยธิน": { lat: 13.815779, lng: 100.562144 },
+    "สวนจตุจักร": { lat: 13.822295, lng: 100.552278 },
+    "กำแพงเพชร": { lat: 13.824706, lng: 100.548481 },
+    "บางซื่อ": { lat: 13.803362, lng: 100.535032 },
+    "เตาปูน": { lat: 13.806306, lng: 100.529450 },
+    "บางโพ": { lat: 13.811808, lng: 100.521833 },
+    "บางอ้อ": { lat: 13.805565, lng: 100.512686 },
+    "บางพลัด": { lat: 13.790588, lng: 100.506541 },
+    "สิรินธร": { lat: 13.782017, lng: 100.493922 },
+    "บางยี่ขัน": { lat: 13.771146, lng: 100.488390 },
+    "บางขุนนนท์": { lat: 13.764491, lng: 100.477085 },
+    "ไฟฉาย": { lat: 13.757352, lng: 100.469033 },
+    "จรัญฯ 13": { lat: 13.751325, lng: 100.470724 },
+    "ท่าพระ": { lat: 13.743015, lng: 100.472280 },
+    "บางไผ่": { lat: 13.734685, lng: 100.468841 },
+    "บางหว้า": { lat: 13.723824, lng: 100.460144 },
+    "เพชรเกษม 48": { lat: 13.722686, lng: 100.444747 },
+    "ภาษีเจริญ": { lat: 13.719601, lng: 100.434440 },
+    "บางแค": { lat: 13.715367, lng: 100.418041 },
+    "หลักสอง": { lat: 13.710784, lng: 100.406103 },
+    "วัดมังกร": { lat: 13.743734, lng: 100.509747 },
+    "สามยอด": { lat: 13.747199, lng: 100.503276 },
+    "สนามไชย": { lat: 13.743384, lng: 100.495048 },
+    "อิสรภาพ": { lat: 13.747444, lng: 100.485233 },
 };
 
 async function detectIntent(userId, text) {
@@ -117,15 +116,12 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     }
 }
 
-function createShopCarousel(places, apiKey) {
+function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
 
-    // จำกัดผลลัพธ์ที่จะแสดงใน Carousel ไม่ให้เกิน 10 การ์ด (ตามข้อกำหนดของ LINE)
-    const placesToShow = places.slice(0, 10);
-
-    const bubbles = placesToShow.map(place => {
+    const bubbles = places.map(place => {
         const placeId = place.place_id;
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
@@ -153,14 +149,14 @@ function createShopCarousel(places, apiKey) {
                 type: 'box', layout: 'vertical', spacing: 'sm',
                 contents: [
                     { type: 'button', style: 'link', height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
-                    { type: 'button', style: 'primary', color: '#FF6B6B', height: 'sm', action: { type: 'postback', label: '❤️ เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
-                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: '🔖 บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
+                    { type: 'button', style: 'primary', color: '#FF6B6B', height: 'sm', action: { type: 'postback', label: ' เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
+                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: ' บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
                 ]
             }
         };
     });
 
-        if (hasNextPage) {
+    if (hasNextPage) {
         const loadMoreBubble = {
             type: 'bubble',
             body: {
@@ -169,7 +165,7 @@ function createShopCarousel(places, apiKey) {
                 spacing: 'sm',
                 contents: [
                     { type: 'button', flex: 1, gravity: 'center',
-                      action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' } }
+                      action: { type: 'postback', label: 'แสดงเพิ่มเติม ', data: 'action=next_page' } }
                 ]
             }
         };
@@ -201,56 +197,47 @@ const handleEvent = async (event) => {
         const data = event.postback.data;
         const params = new URLSearchParams(data);
         const action = params.get('action');
-        const shopId = params.get('shop_id');
-
-        if (action === 'add_favorite') {
-            const favoriteRef = db.collection('users').doc(userId).collection('favorites').doc(shopId);
-            await favoriteRef.set({ addedAt: new Date() });
-            return client.replyMessage(event.replyToken, { type: 'text', text: 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว! ❤️' });
-        } 
-        else if (action === 'add_watch_later') {
-            const watchLaterRef = db.collection('users').doc(userId).collection('watch_later').doc(shopId);
-            await watchLaterRef.set({ addedAt: new Date() });
-            return client.replyMessage(event.replyToken, { type: 'text', text: 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ 🔖' });
-        }
-
-         else if (action === 'next_page') {
-        // 1. ดึงสถานะการค้นหาปัจจุบันของผู้ใช้
-        const userStateRef = db.collection('users').doc(userId);
-        const userDoc = await userStateRef.get();
-        const currentSearch = userDoc.data().currentSearch;
-
-        if (!currentSearch || !currentSearch.placeIds) {
-            return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ' });
-        }
-
-        // 2. คำนวณหน้าต่อไป
-        const currentPage = currentSearch.currentPage;
-        const nextPage = currentPage + 1;
-        const startIndex = currentPage * 5;
         
-        // 3. ดึง ID ร้านค้าสำหรับหน้าต่อไป
-        const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
+        if (action === 'add_favorite' || action === 'add_watch_later') {
+            const shopId = params.get('shop_id');
+            const collectionName = action === 'add_favorite' ? 'favorites' : 'watch_later';
+            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว! ' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ ';
+            
+            const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
+            await docRef.set({ addedAt: new Date() });
+            return client.replyMessage(event.replyToken, { type: 'text', text: replyText });
+        } 
+        
+        else if (action === 'next_page') {
+            const userStateRef = db.collection('users').doc(userId);
+            const userDoc = await userStateRef.get();
+            const currentSearch = userDoc.data().currentSearch;
 
-        if (nextPlaceIds.length === 0) {
-            return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+            if (!currentSearch || !currentSearch.placeIds) {
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่ค่ะ' });
+            }
+
+            const currentPage = currentSearch.currentPage;
+            const nextPage = currentPage + 1;
+            const startIndex = currentPage * 5;
+            
+            const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
+
+            if (nextPlaceIds.length === 0) {
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+            }
+
+            const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
+            const shopDocs = await Promise.all(shopPromises);
+            const placesToShow = shopDocs.filter(doc => doc.exists).map(doc => ({ place_id: doc.id, ...doc.data() }));
+
+            const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
+            const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+
+            await userStateRef.update({ 'currentSearch.currentPage': nextPage });
+
+            return client.replyMessage(event.replyToken, replyMessageObject);
         }
-
-        // 4. ดึงข้อมูลร้านค้าจาก Collection 'shops'
-        const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
-        const shopDocs = await Promise.all(shopPromises);
-        const placesToShow = shopDocs.map(doc => ({ place_id: doc.id, ...doc.data() }));
-
-        // 5. สร้าง Carousel และตรวจสอบว่ามีหน้าต่อไปอีกหรือไม่
-        const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
-        const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
-
-        // 6. อัปเดตสถานะของผู้ใช้
-        await userStateRef.update({ 'currentSearch.currentPage': nextPage });
-
-        return client.replyMessage(event.replyToken, replyMessageObject);
-    }
-
     }
 
     if (event.type !== 'message' || event.message.type !== 'text') {
@@ -260,59 +247,54 @@ const handleEvent = async (event) => {
     const textFromUser = event.message.text.trim();
     const dfResult = await detectIntent(userId, textFromUser);
 
-    if (dfResult && dfResult.intent) {
-        console.log(`Intent detected: ${dfResult.intent.displayName}`);
-        const intentName = dfResult.intent.displayName;
+    if (dfResult && dfResult.intent && dfResult.intent.displayName === 'FindPlaces') {
         const params = dfResult.parameters.fields;
+        const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
+        const station = params.mrt_station ? params.mrt_station.stringValue : '';
 
-        if (intentName === 'FindPlaces') {
-            const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
-            const station = params.mrt_station ? params.mrt_station.stringValue : '';
+        if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
+            return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
+        }
 
-            if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
-                return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
+        if (station && MRT_BLUE_LINE_STATIONS[station]) {
+            const stationInfo = MRT_BLUE_LINE_STATIONS[station];
+            const fullSearchQuery = `${cuisine} ${station}`;
+            const allPlaces = await searchGooglePlaces(process.env.GOOGLE_API_KEY, fullSearchQuery, stationInfo.lat, stationInfo.lng);
+            
+            if (allPlaces && allPlaces.length > 0) {
+                const batch = db.batch();
+                allPlaces.forEach(place => {
+                    const shopRef = db.collection('shops').doc(place.place_id);
+                    batch.set(shopRef, {
+                        name: place.name,
+                        address: place.vicinity || 'ไม่ระบุที่อยู่',
+                    }, { merge: true });
+                });
+                await batch.commit();
+
+                const placeIds = allPlaces.map(place => place.place_id);
+                const userStateRef = db.collection('users').doc(userId);
+                await userStateRef.set({
+                    currentSearch: {
+                        query: fullSearchQuery,
+                        placeIds: placeIds,
+                        currentPage: 1
+                    }
+                }, { merge: true });
+                console.log(`Cached/Updated ${allPlaces.length} shops and user state.`);
             }
-
-            if (station && MRT_BLUE_LINE_STATIONS[station]) {
-                const stationInfo = MRT_BLUE_LINE_STATIONS[station];
-                const fullSearchQuery = `${cuisine} ${station}`;
-                
-                const allPlaces = await searchGooglePlaces(process.env.GOOGLE_API_KEY, fullSearchQuery, stationInfo.lat, stationInfo.lng);
-                
-                if (allPlaces && allPlaces.length > 0) {
-                    const batch = db.batch();
-                    allPlaces.forEach(place => {
-                        const shopRef = db.collection('shops').doc(place.place_id);
-                        batch.set(shopRef, {
-                            name: place.name,
-                            address: place.vicinity || 'ไม่ระบุที่อยู่',
-                        }, { merge: true });
-                    });
-                    await batch.commit();
-
-                    const placeIds = allPlaces.map(place => place.place_id); // ดึงเฉพาะ ID ของร้านค้าทั้งหมด
-
-                    // บันทึกสถานะการค้นหาล่าสุดของผู้ใช้
-                    const userStateRef = db.collection('users').doc(userId);
-                    await userStateRef.set({
-                        currentSearch: {
-                            query: fullSearchQuery,
-                            placeIds: placeIds,
-                            currentPage: 1 // เริ่มต้นที่หน้า 1 เสมอ
-                        }
-                    }, { merge: true }); // merge: true เพื่อไม่ให้เขียนทับข้อมูลโปรไฟล์เดิม
-
-                    console.log(`Cached/Updated ${allPlaces.length} shops to Firestore.`);
-                }
-                
-                const replyMessageObject = createShopCarousel(allPlaces, process.env.GOOGLE_API_KEY);
-                return client.replyMessage(event.replyToken, replyMessageObject);
-            } else {
-                 return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
-            }
+            
+            const placesToShow = allPlaces.slice(0, 5);
+            const hasNextPage = allPlaces.length > 5;
+            const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+            
+            return client.replyMessage(event.replyToken, replyMessageObject);
+        } else {
+             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
         }
     }
     
+    // Fallback
     if (dfResult && dfResult.fulfillmentText) {
         return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
     } else {
