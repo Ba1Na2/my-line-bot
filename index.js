@@ -26,7 +26,7 @@ const db = firebase.firestore();
 
 const googleMapsClient = new Client({});
 
-const DIALOGFLOW_PROJECT_ID = 'linebot-mrt'; // <<< สำคัญ: ตรวจสอบว่า Project ID ถูกต้อง
+const DIALOGFLOW_PROJECT_ID = 'linebot-mrt'; // <<< สำคัญ: แก้เป็น Project ID ของคุณ
 const DIALOGFLOW_KEY_FILE = './dialogflow-key.json';
 const sessionClient = new dialogflow.SessionsClient({
     keyFilename: DIALOGFLOW_KEY_FILE
@@ -77,7 +77,6 @@ const MRT_BLUE_LINE_STATIONS = {
     "สนามไชย": { lat: 13.743384, lng: 100.495048 },
     "อิสรภาพ": { lat: 13.747444, lng: 100.485233 },
 };
-
 
 async function detectIntent(userId, text) {
     const sessionId = uuidv4();
@@ -187,97 +186,119 @@ app.post('/callback', line.middleware(config), (req, res) => {
     Promise
         .all(req.body.events.map(handleEvent))
         .then((result) => res.json(result))
-        .catch((err) => { console.error("Error in Promise.all:", err); res.status(500).end(); });
+        .catch((err) => { console.error(err); res.status(500).end(); });
 });
 
 // ----- 4. EVENT HANDLER -----
 const handleEvent = async (event) => {
     const userId = event.source.userId;
-    try {
-        if (event.type === 'postback') {
-            // ... (โค้ด Postback เดิม) ...
-        }
 
-        if (event.type !== 'message' || event.message.type !== 'text') {
-            return Promise.resolve(null);
-        }
+    if (event.type === 'postback') {
+        const data = event.postback.data;
+        const params = new URLSearchParams(data);
+        const action = params.get('action');
         
-        const textFromUser = event.message.text.trim();
+        if (action === 'add_favorite' || action === 'add_watch_later') {
+            const shopId = params.get('shop_id');
+            const collectionName = action === 'add_favorite' ? 'favorites' : 'watch_later';
+            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว! ❤️' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ 🔖';
+            
+            const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
+            await docRef.set({ addedAt: new Date() });
+            return client.replyMessage(event.replyToken, { type: 'text', text: replyText });
+        } 
         
-        console.log(`[LOG] Received message from ${userId}: "${textFromUser}"`); // <<< LOG 1
+        else if (action === 'next_page') {
+            const userStateRef = db.collection('users').doc(userId);
+            const userDoc = await userStateRef.get();
+            const currentSearch = userDoc.data().currentSearch;
 
-        const dfResult = await detectIntent(userId, textFromUser);
-
-        if (dfResult && dfResult.intent) {
-            console.log(`[LOG] Intent detected: ${dfResult.intent.displayName}`); // <<< LOG 2
-            const intentName = dfResult.intent.displayName;
-            const params = dfResult.parameters.fields;
-
-            if (intentName === 'FindPlaces') {
-                const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
-                const station = params.mrt_station ? params.mrt_station.stringValue : '';
-                
-                console.log(`[LOG] Parameters extracted - Cuisine: "${cuisine}", Station: "${station}"`); // <<< LOG 3
-
-                if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
-                    console.log("[LOG] Dialogflow requires more info. Replying with fulfillment text."); // <<< LOG 4
-                    return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
-                }
-
-                console.log(`[LOG] Checking station "${station}" in MRT_BLUE_LINE_STATIONS...`); // <<< LOG 5
-                
-                if (station && MRT_BLUE_LINE_STATIONS[station]) {
-                    console.log(`[LOG] Station "${station}" FOUND.`); // <<< LOG 6
-                    const stationInfo = MRT_BLUE_LINE_STATIONS[station];
-                    const fullSearchQuery = `${cuisine} ${station}`;
-                    
-                    const allPlaces = await searchGooglePlaces(process.env.GOOGLE_API_KEY, fullSearchQuery, stationInfo.lat, stationInfo.lng);
-                    
-                    if (allPlaces && allPlaces.length > 0) {
-                        const batch = db.batch();
-                        allPlaces.forEach(place => {
-                            const shopRef = db.collection('shops').doc(place.place_id);
-                            batch.set(shopRef, {
-                                name: place.name,
-                                address: place.vicinity || 'ไม่ระบุที่อยู่',
-                            }, { merge: true });
-                        });
-                        await batch.commit();
-
-                        const placeIds = allPlaces.map(place => place.place_id);
-                        const userStateRef = db.collection('users').doc(userId);
-                        await userStateRef.set({
-                            currentSearch: {
-                                query: fullSearchQuery,
-                                placeIds: placeIds,
-                                currentPage: 1
-                            }
-                        }, { merge: true });
-                        console.log(`Cached/Updated ${allPlaces.length} shops and user state.`);
-                    }
-                    
-                    const placesToShow = allPlaces.slice(0, 5);
-                    const hasNextPage = allPlaces.length > 5;
-                    const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
-                    
-                    return client.replyMessage(event.replyToken, replyMessageObject);
-
-                } else {
-                    console.error(`[ERROR] Station "${station}" NOT FOUND in MRT_BLUE_LINE_STATIONS dictionary.`); // <<< LOG 7
-                    return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
-                }
+            if (!currentSearch || !currentSearch.placeIds) {
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่ค่ะ' });
             }
+
+            const currentPage = currentSearch.currentPage;
+            const nextPage = currentPage + 1;
+            const startIndex = currentPage * 5;
+            
+            const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
+
+            if (nextPlaceIds.length === 0) {
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+            }
+
+            const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
+            const shopDocs = await Promise.all(shopPromises);
+            const placesToShow = shopDocs.filter(doc => doc.exists).map(doc => ({ place_id: doc.id, ...doc.data() }));
+
+            const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
+            const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+
+            await userStateRef.update({ 'currentSearch.currentPage': nextPage });
+
+            return client.replyMessage(event.replyToken, replyMessageObject);
         }
-        
-        console.log("[LOG] No specific intent matched or an issue occurred. Using fallback."); // <<< LOG 8
-        if (dfResult && dfResult.fulfillmentText) {
+    }
+
+    if (event.type !== 'message' || event.message.type !== 'text') {
+        return Promise.resolve(null);
+    }
+    
+    const textFromUser = event.message.text.trim();
+    const dfResult = await detectIntent(userId, textFromUser);
+
+    if (dfResult && dfResult.intent && dfResult.intent.displayName === 'FindPlaces') {
+        const params = dfResult.parameters.fields;
+        const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
+        const station = params.mrt_station ? params.mrt_station.stringValue : '';
+
+        if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
             return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
-        } else {
-            return client.replyMessage(event.replyToken, { type: 'text', text: "ขออภัยค่ะ ฉันไม่เข้าใจจริงๆ ลองใหม่อีกครั้งนะคะ" });
         }
-    } catch (error) {
-        console.error("Error in handleEvent:", error);
-        return Promise.resolve(null); // ป้องกันไม่ให้แอป crash
+
+        if (station && MRT_BLUE_LINE_STATIONS[station]) {
+            const stationInfo = MRT_BLUE_LINE_STATIONS[station];
+            const fullSearchQuery = `${cuisine} ${station}`;
+            const allPlaces = await searchGooglePlaces(process.env.GOOGLE_API_KEY, fullSearchQuery, stationInfo.lat, stationInfo.lng);
+            
+            if (allPlaces && allPlaces.length > 0) {
+                const batch = db.batch();
+                allPlaces.forEach(place => {
+                    const shopRef = db.collection('shops').doc(place.place_id);
+                    batch.set(shopRef, {
+                        name: place.name,
+                        address: place.vicinity || 'ไม่ระบุที่อยู่',
+                    }, { merge: true });
+                });
+                await batch.commit();
+
+                const placeIds = allPlaces.map(place => place.place_id);
+                const userStateRef = db.collection('users').doc(userId);
+                await userStateRef.set({
+                    currentSearch: {
+                        query: fullSearchQuery,
+                        placeIds: placeIds,
+                        currentPage: 1
+                    }
+                }, { merge: true });
+                console.log(`Cached/Updated ${allPlaces.length} shops and user state.`);
+            }
+            
+            const placesToShow = allPlaces.slice(0, 5);
+            const hasNextPage = allPlaces.length > 5;
+            const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+            
+            return client.replyMessage(event.replyToken, replyMessageObject);
+        } else {
+             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
+        }
+    }
+    
+    // Fallback
+    if (dfResult && dfResult.fulfillmentText) {
+        return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
+    } else {
+        return client.replyMessage(event.replyToken, { type: 'text', text: "ขออภัยค่ะ ฉันไม่เข้าใจจริงๆ ลองใหม่อีกครั้งนะคะ" });
     }
 };
 
