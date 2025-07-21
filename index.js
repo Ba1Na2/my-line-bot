@@ -39,7 +39,7 @@ app.use(express.static('public'));
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
     // ... (ใส่รายชื่อสถานี MRT ทั้งหมดของคุณที่นี่) ...
-     "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
+    "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
     "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
     "สีลม": {"lat": 13.729908, "lng": 100.535898},
     "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
@@ -160,6 +160,22 @@ function createShopCarousel(places, apiKey) {
         };
     });
 
+        if (hasNextPage) {
+        const loadMoreBubble = {
+            type: 'bubble',
+            body: {
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'sm',
+                contents: [
+                    { type: 'button', flex: 1, gravity: 'center',
+                      action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' } }
+                ]
+            }
+        };
+        bubbles.push(loadMoreBubble);
+    }
+
     return {
         type: 'flex',
         altText: 'ผลการค้นหาร้านค้า',
@@ -197,6 +213,44 @@ const handleEvent = async (event) => {
             await watchLaterRef.set({ addedAt: new Date() });
             return client.replyMessage(event.replyToken, { type: 'text', text: 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ 🔖' });
         }
+
+         else if (action === 'next_page') {
+        // 1. ดึงสถานะการค้นหาปัจจุบันของผู้ใช้
+        const userStateRef = db.collection('users').doc(userId);
+        const userDoc = await userStateRef.get();
+        const currentSearch = userDoc.data().currentSearch;
+
+        if (!currentSearch || !currentSearch.placeIds) {
+            return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ' });
+        }
+
+        // 2. คำนวณหน้าต่อไป
+        const currentPage = currentSearch.currentPage;
+        const nextPage = currentPage + 1;
+        const startIndex = currentPage * 5;
+        
+        // 3. ดึง ID ร้านค้าสำหรับหน้าต่อไป
+        const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
+
+        if (nextPlaceIds.length === 0) {
+            return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+        }
+
+        // 4. ดึงข้อมูลร้านค้าจาก Collection 'shops'
+        const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
+        const shopDocs = await Promise.all(shopPromises);
+        const placesToShow = shopDocs.map(doc => ({ place_id: doc.id, ...doc.data() }));
+
+        // 5. สร้าง Carousel และตรวจสอบว่ามีหน้าต่อไปอีกหรือไม่
+        const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
+        const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+
+        // 6. อัปเดตสถานะของผู้ใช้
+        await userStateRef.update({ 'currentSearch.currentPage': nextPage });
+
+        return client.replyMessage(event.replyToken, replyMessageObject);
+    }
+
     }
 
     if (event.type !== 'message' || event.message.type !== 'text') {
@@ -235,6 +289,19 @@ const handleEvent = async (event) => {
                         }, { merge: true });
                     });
                     await batch.commit();
+
+                    const placeIds = allPlaces.map(place => place.place_id); // ดึงเฉพาะ ID ของร้านค้าทั้งหมด
+
+                    // บันทึกสถานะการค้นหาล่าสุดของผู้ใช้
+                    const userStateRef = db.collection('users').doc(userId);
+                    await userStateRef.set({
+                        currentSearch: {
+                            query: fullSearchQuery,
+                            placeIds: placeIds,
+                            currentPage: 1 // เริ่มต้นที่หน้า 1 เสมอ
+                        }
+                    }, { merge: true }); // merge: true เพื่อไม่ให้เขียนทับข้อมูลโปรไฟล์เดิม
+
                     console.log(`Cached/Updated ${allPlaces.length} shops to Firestore.`);
                 }
                 
