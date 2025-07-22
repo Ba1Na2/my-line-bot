@@ -138,10 +138,9 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         const imageUrl = getImageUrlFromPlace(place, apiKey);
         const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
 
-        // --- แก้ไขโดยเพิ่ม "size": "giga" เข้าไป ---
         return {
             type: 'bubble',
-            size: 'giga', // <<< เพิ่มบรรทัดนี้
+            size: 'giga',
             styles: { footer: { separator: true } },
             body: {
                 type: 'box', layout: 'vertical', paddingAll: '0px',
@@ -169,12 +168,21 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     });
 
     if (hasNextPage) {
+        // --- ส่วนที่แก้ไขให้ถูกต้อง 100% ---
         const loadMoreBubble = {
             type: 'bubble',
-            size: 'giga', // <<< ตัวนี้มีอยู่แล้ว ถูกต้อง
+            size: 'giga',
             body: {
-                type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', padding: '20px',
-                contents: [{ type: 'button', flex: 1, gravity: 'center', action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' } }]
+                type: 'box',
+                layout: 'vertical',
+                paddingAll: '0px', // ทำให้ปุ่มเต็มพื้นที่ body
+                contents: [{
+                    type: 'button',
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
+                    height: 'sm',
+                    color: '#00529B', // สีเดียวกับปุ่มร้านโปรด
+                    style: 'primary'  // ทำให้ดูเหมือนปุ่มจริงๆ
+                }]
             }
         };
         bubbles.push(loadMoreBubble);
@@ -186,7 +194,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         contents: { type: 'carousel', contents: bubbles }
     };
 };
-
 // ----- 3. WEBHOOK ENDPOINT -----
 app.get('/callback', (req, res) => { res.status(200).send('OK'); });
 
