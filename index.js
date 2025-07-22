@@ -125,6 +125,7 @@ function getImageUrlFromPlace(place, apiKey) {
     return imageUrl;
 }
 
+// แก้ไขฟังก์ชันนี้เท่านั้น
 function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
