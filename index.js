@@ -95,36 +95,6 @@ async function detectIntent(userId, text) {
     }
 }
 
-async function searchGooglePlaces(apiKey, keyword, lat, lng) {
-    console.log(`Searching Google (TextSearch) for: ${keyword}`);
-    try {
-        const response = await googleMapsClient.textSearch({
-            params: {
-                query: keyword,
-                location: { lat, lng },
-                radius: 1500,
-                language: 'th',
-                key: apiKey,
-            },
-            timeout: 5000,
-        });
-        console.log('Successfully got response from Google API.');
-        return response.data.results || [];
-    } catch (e) {
-        console.error("Google Maps API (TextSearch) Error:", e.response ? e.response.data : e.message);
-        return [];
-    }
-}
-
-function getImageUrlFromPlace(place, apiKey) {
-    let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
-    if (place.photos && place.photos.length > 0) {
-        const photoReference = place.photos[0].photo_reference;
-        imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
-    }
-    return imageUrl;
-}
-
 // แก้ไขฟังก์ชันนี้เท่านั้น
 function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
@@ -179,7 +149,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                 paddingAll: '0px', // ทำให้ปุ่มเต็มพื้นที่ body
                 contents: [{
                     type: 'button',
-                    action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
                     height: 'sm',
                     color: '#00529B', // สีเดียวกับปุ่มร้านโปรด
                     style: 'primary'  // ทำให้ดูเหมือนปุ่มจริงๆ
