@@ -134,23 +134,44 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         const placeId = place.place_id;
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
+        const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
+        const imageUrl = getImageUrlFromPlace(place, apiKey);
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
 
- return {
-        type: 'bubble',
-        body: {
-            type: 'box',
-            layout: 'vertical',
-            contents: [
-                { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true },
-                { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
-            ]
-        }
-    };
-});
+        // --- แก้ไขโดยเพิ่ม "size": "giga" เข้าไป ---
+        return {
+            type: 'bubble',
+            size: 'giga', // <<< เพิ่มบรรทัดนี้
+            styles: { footer: { separator: true } },
+            body: {
+                type: 'box', layout: 'vertical', paddingAll: '0px',
+                contents: [
+                    { type: 'image', url: imageUrl, size: 'full', aspectMode: 'cover', aspectRatio: '2:1', gravity: 'center' },
+                    {
+                        type: 'box', layout: 'vertical', padding: '20px',
+                        contents: [
+                            { type: 'text', text: name, weight: 'bold', size: 'lg', wrap: true, color: '#001F3F' },
+                            { type: 'box', layout: 'baseline', margin: 'md', contents: [{ type: 'text', text: rating, size: 'sm', color: '#666666', flex: 0 }] },
+                            { type: 'text', text: address, wrap: true, size: 'sm', color: '#333333', margin: 'md' }
+                        ]
+                    }
+                ]
+            },
+            footer: {
+                type: 'box', layout: 'vertical', spacing: 'sm', padding: '20px',
+                contents: [
+                    { type: 'button', style: 'link', height: 'sm', color: '#001F3F', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
+                    { type: 'button', style: 'primary', color: '#00529B', height: 'sm', action: { type: 'postback', label: 'เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
+                    { type: 'button', style: 'secondary', height: 'sm', action: { type: 'postback', label: 'บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
+                ]
+            }
+        };
+    });
 
     if (hasNextPage) {
         const loadMoreBubble = {
-            type: 'bubble', size: 'giga',
+            type: 'bubble',
+            size: 'giga', // <<< ตัวนี้มีอยู่แล้ว ถูกต้อง
             body: {
                 type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', padding: '20px',
                 contents: [{ type: 'button', flex: 1, gravity: 'center', action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' } }]
