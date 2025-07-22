@@ -26,7 +26,7 @@ const db = firebase.firestore();
 
 const googleMapsClient = new Client({});
 
-const DIALOGFLOW_PROJECT_ID = 'linebot-mrt'; // <<< สำคัญ: ตรวจสอบว่า Project ID ของคุณถูกต้อง
+const DIALOGFLOW_PROJECT_ID = 'linebot-mrt';
 const DIALOGFLOW_KEY_FILE = './dialogflow-key.json';
 const sessionClient = new dialogflow.SessionsClient({
     keyFilename: DIALOGFLOW_KEY_FILE
@@ -125,7 +125,7 @@ function getImageUrlFromPlace(place, apiKey) {
     return imageUrl;
 }
 
-function createShopCarousel(places, apiKey, hasNextPage) {
+function createShopCarousel(places, apiKey) { // <<< เอา hasNextPage ออก
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
@@ -167,25 +167,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         };
     });
 
-    if (hasNextPage) {
-        const loadMoreBubble = {
-            type: 'bubble',
-            size: 'giga',
-            body: {
-                type: 'box',
-                layout: 'vertical',
-                paddingAll: '0px',
-                contents: [{
-                    type: 'button',
-                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
-                    height: 'sm',
-                    color: '#00529B',
-                    style: 'primary'
-                }]
-            }
-        };
-        bubbles.push(loadMoreBubble);
-    }
+    // --- ลบ if (hasNextPage) ทิ้งไป ---
 
     return {
         type: 'flex',
@@ -222,37 +204,7 @@ const handleEvent = async (event) => {
                 await docRef.set({ addedAt: new Date() });
                 return client.replyMessage(event.replyToken, { type: 'text', text: replyText });
             } 
-            
-            else if (action === 'next_page') {
-                const userStateRef = db.collection('users').doc(userId);
-                const userDoc = await userStateRef.get();
-                
-                if (!userDoc.exists || !userDoc.data().currentSearch) {
-                    return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัย ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่' });
-                }
-                const currentSearch = userDoc.data().currentSearch;
-
-                const currentPage = currentSearch.currentPage;
-                const nextPage = currentPage + 1;
-                const startIndex = currentPage * 5;
-                
-                const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
-
-                if (nextPlaceIds.length === 0) {
-                    return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้ว' });
-                }
-
-                const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
-                const shopDocs = await Promise.all(shopPromises);
-                const placesToShow = shopDocs.filter(doc => doc.exists).map(doc => ({ place_id: doc.id, ...doc.data() }));
-
-                const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
-                const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
-
-                await userStateRef.update({ 'currentSearch.currentPage': nextPage });
-
-                return client.replyMessage(event.replyToken, replyMessageObject);
-            }
+            // --- ลบ else if (action === 'next_page') ทิ้งไป ---
         }
 
         if (event.type !== 'message' || event.message.type !== 'text') {
@@ -287,22 +239,12 @@ const handleEvent = async (event) => {
                         }, { merge: true });
                     });
                     await batch.commit();
-
-                    const placeIds = allPlaces.map(place => place.place_id);
-                    const userStateRef = db.collection('users').doc(userId);
-                    await userStateRef.set({
-                        currentSearch: {
-                            query: fullSearchQuery,
-                            placeIds: placeIds,
-                            currentPage: 1
-                        }
-                    }, { merge: true });
-                    console.log(`Cached/Updated ${allPlaces.length} shops and user state.`);
+                    console.log(`Cached/Updated ${allPlaces.length} shops.`);
                 }
                 
+                // --- ย้อนกลับไปแสดงแค่ 5 ร้าน และไม่มีการบันทึก State ---
                 const placesToShow = allPlaces.slice(0, 5);
-                const hasNextPage = allPlaces.length > 5;
-                const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
+                const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY); // ไม่ส่ง hasNextPage
                 
                 return client.replyMessage(event.replyToken, replyMessageObject);
             } else {
@@ -317,7 +259,6 @@ const handleEvent = async (event) => {
         }
     } catch (error) {
         console.error("Error in handleEvent:", error);
-        // ส่งข้อความขออภัยหาผู้ใช้ในกรณีเกิด Error ที่ไม่คาดคิด
         if (event.replyToken) {
             return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ เกิดข้อผิดพลาดบางอย่างในระบบ' });
         }
