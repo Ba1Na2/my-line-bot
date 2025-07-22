@@ -179,7 +179,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                 paddingAll: '0px', // ทำให้ปุ่มเต็มพื้นที่ body
                 contents: [{
                     type: 'button',
-                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
                     height: 'sm',
                     color: '#00529B', // สีเดียวกับปุ่มร้านโปรด
                     style: 'primary'  // ทำให้ดูเหมือนปุ่มจริงๆ
