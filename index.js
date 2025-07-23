@@ -117,7 +117,17 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     }
 }
 
-// แก้ไขฟังก์ชันนี้เท่านั้น
+function getImageUrlFromPlace(place, apiKey) {
+    let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+    if (place.photos && place.photos.length > 0) {
+        const photoReference = place.photos[0].photo_reference;
+        imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
+    }
+    return imageUrl;
+}
+// *** จบส่วนฟังก์ชันที่ขาดไป ***
+
+
 function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
@@ -128,7 +138,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
         const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
-        const imageUrl = getImageUrlFromPlace(place, apiKey);
+        const imageUrl = getImageUrlFromPlace(place, apiKey); // << ใช้ฟังก์ชัน helper
         const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
 
         return {
@@ -161,20 +171,16 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     });
 
     if (hasNextPage) {
-        // --- ส่วนที่แก้ไขให้ถูกต้อง 100% ---
         const loadMoreBubble = {
-            type: 'bubble',
-            size: 'giga',
+            type: 'bubble', size: 'giga',
             body: {
-                type: 'box',
-                layout: 'vertical',
-                paddingAll: '0px', // ทำให้ปุ่มเต็มพื้นที่ body
+                type: 'box', layout: 'vertical', paddingAll: '0px',
                 contents: [{
                     type: 'button',
                     action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
                     height: 'sm',
-                    color: '#00529B', // สีเดียวกับปุ่มร้านโปรด
-                    style: 'primary'  // ทำให้ดูเหมือนปุ่มจริงๆ
+                    color: '#00529B',
+                    style: 'primary'
                 }]
             }
         };
