@@ -117,6 +117,7 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     }
 }
 
+// แก้ไขฟังก์ชันนี้เท่านั้น
 function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
@@ -127,56 +128,58 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
         const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
-        let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
-        
-        if (place.photos && place.photos.length > 0) {
-            const photoReference = place.photos[0].photo_reference;
-            imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
-        }
+        const imageUrl = getImageUrlFromPlace(place, apiKey);
         const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
 
         return {
             type: 'bubble',
-            hero: { type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover' },
+            size: 'giga',
+            styles: { footer: { separator: true } },
             body: {
-                type: 'box', layout: 'vertical',
+                type: 'box', layout: 'vertical', paddingAll: '0px',
                 contents: [
-                    { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true },
-                    { type: 'box', layout: 'baseline', margin: 'md', contents: [{ type: 'text', text: rating, size: 'sm', color: '#999999', flex: 0 }] },
-                    { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
+                    { type: 'image', url: imageUrl, size: 'full', aspectMode: 'cover', aspectRatio: '2:1', gravity: 'center' },
+                    {
+                        type: 'box', layout: 'vertical', padding: '20px',
+                        contents: [
+                            { type: 'text', text: name, weight: 'bold', size: 'lg', wrap: true, color: '#001F3F' },
+                            { type: 'box', layout: 'baseline', margin: 'md', contents: [{ type: 'text', text: rating, size: 'sm', color: '#666666', flex: 0 }] },
+                            { type: 'text', text: address, wrap: true, size: 'sm', color: '#333333', margin: 'md' }
+                        ]
+                    }
                 ]
             },
             footer: {
-                type: 'box', layout: 'vertical', spacing: 'sm',
+                type: 'box', layout: 'vertical', spacing: 'sm', padding: '20px',
                 contents: [
-                    { type: 'button', style: 'link', height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
-                    { type: 'button', style: 'primary', color: '#FF6B6B', height: 'sm', action: { type: 'postback', label: '❤️ เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
-                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: '🔖 บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
+                    { type: 'button', style: 'link', height: 'sm', color: '#001F3F', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
+                    { type: 'button', style: 'primary', color: '#00529B', height: 'sm', action: { type: 'postback', label: 'เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
+                    { type: 'button', style: 'secondary', height: 'sm', action: { type: 'postback', label: 'บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
                 ]
             }
         };
     });
 
-    // --- **เพิ่มส่วนนี้เข้าไป** ---
     if (hasNextPage) {
+        // --- ส่วนที่แก้ไขให้ถูกต้อง 100% ---
         const loadMoreBubble = {
             type: 'bubble',
+            size: 'giga',
             body: {
                 type: 'box',
                 layout: 'vertical',
-                paddingAll: '0px',
+                paddingAll: '0px', // ทำให้ปุ่มเต็มพื้นที่ body
                 contents: [{
                     type: 'button',
                     action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
                     height: 'sm',
-                    color: '#00529B',
-                    style: 'primary'
+                    color: '#00529B', // สีเดียวกับปุ่มร้านโปรด
+                    style: 'primary'  // ทำให้ดูเหมือนปุ่มจริงๆ
                 }]
             }
         };
         bubbles.push(loadMoreBubble);
     }
-    // --- จบส่วนที่เพิ่ม ---
 
     return {
         type: 'flex',
