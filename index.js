@@ -81,7 +81,7 @@ const MRT_BLUE_LINE_STATIONS = {
 
 async function detectIntent(userId, text) {
     const sessionId = uuidv4();
-    const sessionPath = sessionClient.projectAgentSessionPath(DIALOGFLOW_PROJECT_ID, sessionId);
+    const sessionPath = `projects/${DIALOGFLOW_PROJECT_ID}/agent/sessions/${sessionId}`;
     const request = {
         session: sessionPath,
         queryInput: { text: { text: text, languageCode: 'th-TH' } },
