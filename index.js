@@ -35,7 +35,6 @@ const sessionClient = new dialogflow.SessionsClient({
 const app = express();
 app.use(express.static('public'));
 
-
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
     // ... (ใส่รายชื่อสถานี MRT ทั้งหมดของคุณที่นี่) ...
@@ -125,10 +124,10 @@ function getImageUrlFromPlace(place, apiKey) {
     }
     return imageUrl;
 }
-// *** จบส่วนฟังก์ชันที่ขาดไป ***
 
 
-function createShopCarousel(places, apiKey, hasNextPage) {
+
+function createShopCarousel(places, apiKey) { // << ลบ hasNextPage ออก
     if (!places || places.length === 0) {
         return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
@@ -138,7 +137,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
         const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
-        const imageUrl = getImageUrlFromPlace(place, apiKey); // << ใช้ฟังก์ชัน helper
+        const imageUrl = getImageUrlFromPlace(place, apiKey);
         const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
 
         return {
@@ -169,23 +168,8 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             }
         };
     });
-
-    if (hasNextPage) {
-        const loadMoreBubble = {
-            type: 'bubble', size: 'giga',
-            body: {
-                type: 'box', layout: 'vertical', paddingAll: '0px',
-                contents: [{
-                    type: 'button',
-                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
-                    height: 'sm',
-                    color: '#00529B',
-                    style: 'primary'
-                }]
-            }
-        };
-        bubbles.push(loadMoreBubble);
-    }
+    
+    // --- **ลบส่วน if (hasNextPage) ทิ้งไปทั้งหมด** ---
 
     return {
         type: 'flex',
@@ -193,6 +177,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         contents: { type: 'carousel', contents: bubbles }
     };
 };
+
 
 // ----- 3. WEBHOOK ENDPOINT -----
 app.get('/callback', (req, res) => { res.status(200).send('OK'); });
