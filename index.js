@@ -26,7 +26,7 @@ const db = firebase.firestore();
 
 const googleMapsClient = new Client({});
 
-const DIALOGFLOW_PROJECT_ID = 'linebot-mrt'; // <<< สำคัญ: แก้เป็น Project ID ของคุณ
+const DIALOGFLOW_PROJECT_ID = 'linebot-mrt';
 const DIALOGFLOW_KEY_FILE = './dialogflow-key.json';
 const sessionClient = new dialogflow.SessionsClient({
     keyFilename: DIALOGFLOW_KEY_FILE
@@ -39,14 +39,44 @@ app.use(express.static('public'));
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
     // ... (ใส่รายชื่อสถานี MRT ทั้งหมดของคุณที่นี่) ...
-    "หัวลำโพง": { lat: 13.739186, lng: 100.516893 },
-    "สามย่าน": { lat: 13.732952, lng: 100.529431 },
-    "สีลม": { lat: 13.729908, lng: 100.535898 },
-    "สุขุมวิท": { lat: 13.738012, lng: 100.561081 },
-    "บางซื่อ": { lat: 13.803362, lng: 100.535032 },
-    "พระราม 9": { lat: 13.758031, lng: 100.565439 },
-    "ศูนย์วัฒนธรรมแห่งประเทศไทย": { lat: 13.765664, lng: 100.569106 },
-    // เพิ่มให้ครบ...
+     "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
+    "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
+    "สีลม": {"lat": 13.729908, "lng": 100.535898},
+    "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
+    "คลองเตย": {"lat": 13.723912, "lng": 100.556276},
+    "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587},
+    "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081},
+    "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919},
+    "พระราม 9": {"lat": 13.758031, "lng": 100.565439},
+    "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106},
+    "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633},
+    "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784},
+    "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647},
+    "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899},
+    "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144},
+    "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278},
+    "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481},
+    "บางซื่อ": {"lat": 13.803362, "lng": 100.535032},
+    "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, 
+    "บางโพ": {"lat": 13.811808, "lng": 100.521833},
+    "บางอ้อ": {"lat": 13.805565, "lng": 100.512686},
+    "บางพลัด": {"lat": 13.790588, "lng": 100.506541},
+    "สิรินธร": {"lat": 13.782017, "lng": 100.493922},
+    "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390},
+    "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085},
+    "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033},
+    "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724},
+    "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, 
+    "บางไผ่": {"lat": 13.734685, "lng": 100.468841},
+    "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, 
+    "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747},
+    "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440},
+    "บางแค": {"lat": 13.715367, "lng": 100.418041},
+    "หลักสอง": {"lat": 13.710784, "lng": 100.406103},
+    "วัดมังกร": {"lat": 13.743734, "lng": 100.509747},
+    "สามยอด": {"lat": 13.747199, "lng": 100.503276},
+    "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
+    "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
 };
 
 async function detectIntent(userId, text) {
@@ -127,21 +157,26 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         };
     });
 
+    // --- **เพิ่มส่วนนี้เข้าไป** ---
     if (hasNextPage) {
         const loadMoreBubble = {
             type: 'bubble',
             body: {
                 type: 'box',
                 layout: 'vertical',
-                spacing: 'sm',
-                contents: [
-                    { type: 'button', flex: 1, gravity: 'center',
-                      action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' } }
-                ]
+                paddingAll: '0px',
+                contents: [{
+                    type: 'button',
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' },
+                    height: 'sm',
+                    color: '#00529B',
+                    style: 'primary'
+                }]
             }
         };
         bubbles.push(loadMoreBubble);
     }
+    // --- จบส่วนที่เพิ่ม ---
 
     return {
         type: 'flex',
@@ -172,22 +207,22 @@ const handleEvent = async (event) => {
         if (action === 'add_favorite' || action === 'add_watch_later') {
             const shopId = params.get('shop_id');
             const collectionName = action === 'add_favorite' ? 'favorites' : 'watch_later';
-            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว! ❤️' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ 🔖';
+            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว!' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้ว';
             
             const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
             await docRef.set({ addedAt: new Date() });
             return client.replyMessage(event.replyToken, { type: 'text', text: replyText });
         } 
         
-        // --- **เพิ่ม Logic นี้เข้าไป** ---
+        // --- **เพิ่ม else if บล็อกนี้เข้าไป** ---
         else if (action === 'next_page') {
             const userStateRef = db.collection('users').doc(userId);
             const userDoc = await userStateRef.get();
-            const currentSearch = userDoc.data().currentSearch;
-
-            if (!currentSearch || !currentSearch.placeIds) {
-                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่ค่ะ' });
+            
+            if (!userDoc.exists || !userDoc.data().currentSearch) {
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัย ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่' });
             }
+            const currentSearch = userDoc.data().currentSearch;
 
             const currentPage = currentSearch.currentPage;
             const nextPage = currentPage + 1;
@@ -196,7 +231,7 @@ const handleEvent = async (event) => {
             const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
 
             if (nextPlaceIds.length === 0) {
-                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้ว' });
             }
 
             const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
@@ -210,6 +245,7 @@ const handleEvent = async (event) => {
 
             return client.replyMessage(event.replyToken, replyMessageObject);
         }
+        // --- จบส่วนที่เพิ่ม ---
     }
 
     if (event.type !== 'message' || event.message.type !== 'text') {
@@ -222,7 +258,7 @@ const handleEvent = async (event) => {
     if (dfResult && dfResult.intent && dfResult.intent.displayName === 'FindPlaces') {
         const params = dfResult.parameters.fields;
         const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
-        const station = params.mrt_station ? params.mrt_station.stringValue : '';
+        const station = params.mrt_station ? params.mt_station.stringValue : '';
 
         if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
             return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
@@ -244,6 +280,7 @@ const handleEvent = async (event) => {
                 });
                 await batch.commit();
 
+                // --- **เพิ่มส่วนบันทึก State เข้าไป** ---
                 const placeIds = allPlaces.map(place => place.place_id);
                 const userStateRef = db.collection('users').doc(userId);
                 await userStateRef.set({
@@ -254,22 +291,24 @@ const handleEvent = async (event) => {
                     }
                 }, { merge: true });
                 console.log(`Cached/Updated ${allPlaces.length} shops and user state.`);
+                // --- จบส่วนที่เพิ่ม ---
             }
             
+            // --- **แก้ไขส่วนแสดงผล** ---
             const placesToShow = allPlaces.slice(0, 5);
             const hasNextPage = allPlaces.length > 5;
             const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
             
             return client.replyMessage(event.replyToken, replyMessageObject);
         } else {
-             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
+             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัย ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
         }
     }
     
     if (dfResult && dfResult.fulfillmentText) {
         return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
     } else {
-        return client.replyMessage(event.replyToken, { type: 'text', text: "ขออภัยค่ะ ฉันไม่เข้าใจจริงๆ ลองใหม่อีกครั้งนะคะ" });
+        return client.replyMessage(event.replyToken, { type: 'text', text: "ขออภัย ฉันไม่เข้าใจจริงๆ ลองใหม่อีกครั้ง" });
     }
 };
 
