@@ -257,8 +257,8 @@ const handleEvent = async (event) => {
 
     if (dfResult && dfResult.intent && dfResult.intent.displayName === 'FindPlaces') {
         const params = dfResult.parameters.fields;
-        const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
-        const station = params.mrt_station ? params.mt_station.stringValue : '';
+        const cuisine = params.cuisine?.stringValue || 'ร้านอาหาร';
+        const station = params.mrt_station?.stringValue || '';
 
         if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
             return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
