@@ -38,15 +38,44 @@ app.use(express.static('public'));
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
-    // ... (ใส่รายชื่อสถานี MRT ทั้งหมดของคุณที่นี่) ...
-    "หัวลำโพง": { lat: 13.739186, lng: 100.516893 },
-    "สามย่าน": { lat: 13.732952, lng: 100.529431 },
-    "สีลม": { lat: 13.729908, lng: 100.535898 },
-    "สุขุมวิท": { lat: 13.738012, lng: 100.561081 },
-    "บางซื่อ": { lat: 13.803362, lng: 100.535032 },
-    "พระราม 9": { lat: 13.758031, lng: 100.565439 },
-    "ศูนย์วัฒนธรรมแห่งประเทศไทย": { lat: 13.765664, lng: 100.569106 },
-    // เพิ่มให้ครบ...
+    "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
+    "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
+    "สีลม": {"lat": 13.729908, "lng": 100.535898},
+    "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
+    "คลองเตย": {"lat": 13.723912, "lng": 100.556276},
+    "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587},
+    "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081},
+    "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919},
+    "พระราม 9": {"lat": 13.758031, "lng": 100.565439},
+    "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106},
+    "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633},
+    "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784},
+    "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647},
+    "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899},
+    "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144},
+    "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278},
+    "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481},
+    "บางซื่อ": {"lat": 13.803362, "lng": 100.535032},
+    "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, 
+    "บางโพ": {"lat": 13.811808, "lng": 100.521833},
+    "บางอ้อ": {"lat": 13.805565, "lng": 100.512686},
+    "บางพลัด": {"lat": 13.790588, "lng": 100.506541},
+    "สิรินธร": {"lat": 13.782017, "lng": 100.493922},
+    "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390},
+    "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085},
+    "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033},
+    "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724},
+    "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, 
+    "บางไผ่": {"lat": 13.734685, "lng": 100.468841},
+    "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, 
+    "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747},
+    "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440},
+    "บางแค": {"lat": 13.715367, "lng": 100.418041},
+    "หลักสอง": {"lat": 13.710784, "lng": 100.406103},
+    "วัดมังกร": {"lat": 13.743734, "lng": 100.509747},
+    "สามยอด": {"lat": 13.747199, "lng": 100.503276},
+    "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
+    "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
 };
 
 async function detectIntent(userId, text) {
@@ -93,6 +122,11 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     }
 
     const bubbles = places.map(place => {
+        // ตรวจสอบข้อมูลให้ดีขึ้น
+        if (!place || !place.place_id) {
+            return null; // ข้าม bubble ที่ข้อมูลไม่ถูกต้อง
+        }
+
         const placeId = place.place_id;
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
@@ -116,16 +150,78 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
                 ]
             },
+            // --- VVVVVV START: ส่วน Footer ที่แก้ไขใหม่ทั้งหมด VVVVVV ---
             footer: {
-                type: 'box', layout: 'vertical', spacing: 'sm',
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'md',
                 contents: [
-                    { type: 'button', style: 'link', height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
-                    { type: 'button', style: 'primary', color: '#FF6B6B', height: 'sm', action: { type: 'postback', label: '❤️ เพิ่มเป็นร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` } },
-                    { type: 'button', style: 'secondary', color: '#BDBDBD', height: 'sm', action: { type: 'postback', label: '🔖 บันทึกไวดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` } },
+                    {
+                        type: 'button',
+                        style: 'link',
+                        height: 'sm',
+                        action: {
+                            type: 'uri',
+                            label: '📍 ดูบนแผนที่',
+                            uri: gmapsUrl
+                        }
+                    },
+                    {
+                        type: 'box', // ใช้ box ครอบเพื่อให้ปุ่มอยู่แนวนอน
+                        layout: 'horizontal',
+                        spacing: 'sm',
+                        contents: [
+                            { // ปุ่ม "ร้านโปรด" (ทำเหมือนปุ่มจริง)
+                                type: 'box',
+                                layout: 'horizontal',
+                                cornerRadius: 'md',
+                                backgroundColor: '#FFF0F5', // สีชมพูอ่อน
+                                paddingAll: 'md',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                flex: 1, // ทำให้ปุ่มขยายเท่ากัน
+                                action: {
+                                    type: 'postback',
+                                    label: 'add_favorite', // label สำหรับ accessibility
+                                    data: `action=add_favorite&shop_id=${placeId}`
+                                },
+                                contents: [
+                                     { type: 'text', text: '❤️', flex: 0, margin: 'none', size: 'sm' },
+                                     { type: 'text', text: 'ร้านโปรด', color: '#E83E8C', margin: 'md', weight: 'bold', size: 'sm' }
+                                ]
+                            },
+                            { // ปุ่ม "ดูภายหลัง" (ทำเหมือนปุ่มจริง)
+                                type: 'box',
+                                layout: 'horizontal',
+                                cornerRadius: 'md',
+                                borderWidth: '1px',
+                                borderColor: '#CCCCCC',
+                                paddingAll: 'md',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                flex: 1, // ทำให้ปุ่มขยายเท่ากัน
+                                action: {
+                                    type: 'postback',
+                                    label: 'add_watch_later',
+                                    data: `action=add_watch_later&shop_id=${placeId}`
+                                },
+                                contents: [
+                                    { type: 'text', text: '🔖', flex: 0, margin: 'none', size: 'sm' },
+                                    { type: 'text', text: 'ดูภายหลัง', color: '#555555', margin: 'md', weight: 'bold', size: 'sm' }
+                                ]
+                            }
+                        ]
+                    }
                 ]
             }
+            // --- ^^^^^^ END: ส่วน Footer ที่แก้ไขใหม่ทั้งหมด ^^^^^^ ---
         };
-    });
+    }).filter(bubble => bubble !== null); // กรองเอา bubble ที่เป็น null ออก
+
+    // ตรวจสอบอีกครั้งหลังจากกรองแล้ว
+    if (bubbles.length === 0) {
+        return { type: 'text', text: 'ขออภัยค่ะ มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
+    }
 
     if (hasNextPage) {
         const loadMoreBubble = {
@@ -183,15 +279,20 @@ const handleEvent = async (event) => {
         else if (action === 'next_page') {
             const userStateRef = db.collection('users').doc(userId);
             const userDoc = await userStateRef.get();
-            const currentSearch = userDoc.data().currentSearch;
-
-            if (!currentSearch || !currentSearch.placeIds) {
+            
+            // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
+            // แก้ไขการตรวจสอบข้อมูลเล็กน้อย
+            if (!userDoc.exists || !userDoc.data().currentSearch) {
                 return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่ค่ะ' });
             }
 
-            const currentPage = currentSearch.currentPage;
-            const nextPage = currentPage + 1;
+            const currentSearch = userDoc.data().currentSearch;
+            const currentPage = currentSearch.currentPage || 1; // ให้มีค่าเริ่มต้น
             const startIndex = currentPage * 5;
+            
+            if (startIndex >= currentSearch.placeIds.length) {
+                 return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+            }
             
             const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
 
@@ -199,14 +300,19 @@ const handleEvent = async (event) => {
                 return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
             }
 
+            // ดึงข้อมูล shop ที่สมบูรณ์จาก Firestore
             const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
             const shopDocs = await Promise.all(shopPromises);
-            const placesToShow = shopDocs.filter(doc => doc.exists).map(doc => ({ place_id: doc.id, ...doc.data() }));
+            const placesToShow = shopDocs
+                .filter(doc => doc.exists)
+                .map(doc => doc.data()); // ใช้ .data() เพื่อเอา object ที่สมบูรณ์ออกมา
 
             const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
             const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
 
-            await userStateRef.update({ 'currentSearch.currentPage': nextPage });
+            // อัปเดต page ต่อไป
+            await userStateRef.update({ 'currentSearch.currentPage': currentPage + 1 });
+            // --- ^^^^^^ END: ส่วนที่แก้ไข ^^^^^^ ---
 
             return client.replyMessage(event.replyToken, replyMessageObject);
         }
@@ -237,10 +343,16 @@ const handleEvent = async (event) => {
                 const batch = db.batch();
                 allPlaces.forEach(place => {
                     const shopRef = db.collection('shops').doc(place.place_id);
+                    // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
+                    // บันทึกข้อมูลที่จำเป็นทั้งหมดลง Firestore
                     batch.set(shopRef, {
-                        name: place.name,
-                        address: place.vicinity || 'ไม่ระบุที่อยู่',
+                        place_id: place.place_id, // สำคัญมาก
+                        name: place.name || 'ไม่มีชื่อ',
+                        vicinity: place.vicinity || 'ไม่ระบุที่อยู่',
+                        rating: place.rating || null,
+                        photos: place.photos || null // บันทึกข้อมูลรูปภาพไปด้วย
                     }, { merge: true });
+                    // --- ^^^^^^ END: ส่วนที่แก้ไข ^^^^^^ ---
                 });
                 await batch.commit();
 
