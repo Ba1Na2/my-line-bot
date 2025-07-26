@@ -95,6 +95,7 @@ async function detectIntent(userId, text) {
     }
 }
 
+
 async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     console.log(`Searching Google (TextSearch) for: ${keyword}`);
     try {
@@ -246,9 +247,84 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     };
 };
 
-// ----- 3. WEBHOOK ENDPOINT -----
-app.get('/callback', (req, res) => { res.status(200).send('OK'); });
 
+async function saveOrUpdateUserProfile(profile) {
+    if (!profile || !profile.userId) {
+        console.error('Cannot save user profile: Invalid profile data received.');
+        return;
+    }
+
+    const userId = profile.userId;
+    const userRef = db.collection('users').doc(userId);
+
+    const userData = {
+        line_userId: userId,
+        displayName: profile.displayName,
+        pictureUrl: profile.pictureUrl,
+        statusMessage: profile.statusMessage || null, // บางคนอาจไม่มี status message
+        lastUpdatedAt: new Date() // บันทึกเวลาที่อัปเดตข้อมูลล่าสุด
+    };
+
+    try {
+        // ใช้ set และ merge:true เพื่อสร้างใหม่ถ้ายังไม่มี หรืออัปเดตถ้ามีอยู่แล้ว โดยไม่ลบข้อมูลเก่า
+        await userRef.set(userData, { merge: true });
+        console.log(`Successfully saved/updated profile for user: ${profile.displayName}`);
+    } catch (error) {
+        console.error(`Failed to save profile for user ${userId}:`, error);
+    }
+}
+
+
+// ----- 3. WEBHOOK & LOGIN ENDPOINTS -----
+// =========================================================
+
+// --- ประตูสำหรับ LINE Login (GET request) ---
+// ผู้ใช้จะถูกส่งมาที่นี่หลังจากกดยินยอมในหน้า LINE Login
+app.get('/auth/callback', async (req, res) => {
+    const code = req.query.code;
+    if (!code) { return res.status(400).send('Error: Authorization code not found.'); }
+
+    try {
+        // 1. เตรียมข้อมูลเพื่อนำ 'code' ไปแลกเป็น 'บัตรผ่าน' (Access Token)
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', process.env.LINE_LOGIN_CALLBACK_URL);
+        params.append('client_id', process.env.LINE_LOGIN_CHANNEL_ID);
+        params.append('client_secret', process.env.LINE_LOGIN_CHANNEL_SECRET);
+
+        // 2. ส่งคำขอไปที่ LINE เพื่อขอ 'บัตรผ่าน'
+        const response = await fetch('https://api.line.me/oauth2/v2.1/token', {
+            method: 'POST',
+            body: params
+        });
+        const tokenData = await response.json();
+        
+        if (tokenData.error) throw new Error(tokenData.error_description);
+        
+        const accessToken = tokenData.access_token;
+
+        // 3. เมื่อได้ 'บัตรผ่าน' แล้ว ก็นำไปขอ 'ข้อมูลโปรไฟล์'
+        const profileResponse = await fetch('https://api.line.me/v2/profile', {
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+        const profile = await profileResponse.json();
+
+        // 4. เรียกใช้ฟังก์ชันกลางเพื่อบันทึกข้อมูล
+        await saveOrUpdateUserProfile(profile);
+
+        // 5. ส่งผู้ใช้ไปยังหน้า "สำเร็จ"
+        res.send('<h1>การเชื่อมต่อสำเร็จ!</h1><p>คุณสามารถปิดหน้านี้และกลับไปที่แชท LINE ได้เลย</p>');
+
+    } catch (error) {
+        console.error('Error in LINE Login callback:', error);
+        res.status(500).send('เกิดข้อผิดพลาดระหว่างการเชื่อมต่อ');
+    }
+});
+
+
+// --- ประตูสำหรับบอทคุย (POST request) ---
+// เซิร์ฟเวอร์ LINE จะส่ง Event ต่างๆ (เช่น ข้อความ, follow) มาที่นี่
 app.post('/callback', line.middleware(config), (req, res) => {
     Promise
         .all(req.body.events.map(handleEvent))
@@ -259,6 +335,28 @@ app.post('/callback', line.middleware(config), (req, res) => {
 // ----- 4. EVENT HANDLER -----
 const handleEvent = async (event) => {
     const userId = event.source.userId;
+
+        // --- เพิ่ม Logic สำหรับ Event 'follow' ---
+    if (event.type === 'follow') {
+        const userId = event.source.userId;
+        try {
+            // 1. ดึงข้อมูลโปรไฟล์จาก LINE Messaging API
+            const profile = await client.getProfile(userId);
+            
+            // 2. เรียกใช้ฟังก์ชันกลางเพื่อบันทึกข้อมูล
+            await saveOrUpdateUserProfile(profile);
+
+            // 3. ส่งข้อความต้อนรับ (จะใส่หรือไม่ก็ได้)
+            return client.replyMessage(event.replyToken, {
+                type: 'text',
+                text: `สวัสดีค่ะคุณ ${profile.displayName}! ขอบคุณที่เพิ่มเราเป็นเพื่อนนะคะ`
+            });
+            
+        } catch (error) {
+            console.error('Error handling follow event:', error);
+        }
+        return Promise.resolve(null);
+    }
 
     if (event.type === 'postback') {
         const data = event.postback.data;
@@ -319,7 +417,9 @@ const handleEvent = async (event) => {
     }
 
     if (event.type !== 'message' || event.message.type !== 'text') {
-        return Promise.resolve(null);
+       if (event.type !== 'follow') {
+            return Promise.resolve(null);
+        }
     }
     
     const textFromUser = event.message.text.trim();
