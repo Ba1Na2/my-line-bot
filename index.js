@@ -283,6 +283,7 @@ const handleEvent = async (event) => {
             return client.replyMessage(event.replyToken, {
                 type: 'text',
                 text: `สวัสดีค่ะคุณ ${profile.displayName}! ขอบคุณที่เพิ่มเพื่อนนะคะ ยินดีให้บริการค่ะ 😊`
+
             });
             
         } catch (error) {
@@ -375,7 +376,7 @@ const handleEvent = async (event) => {
                 const batch = db.batch();
                 allPlaces.forEach(place => {
                     const shopRef = db.collection('shops').doc(place.place_id);
-                    // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
+                     // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
                     // บันทึกข้อมูลที่จำเป็นทั้งหมดลง Firestore
                     batch.set(shopRef, {
                         place_id: place.place_id, // สำคัญมาก

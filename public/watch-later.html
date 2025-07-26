@@ -20,11 +20,31 @@
         border-bottom: 2px solid #00529B;
         padding-bottom: 10px;
         margin-bottom: 24px;
-        padding-left: 20px; /* เพิ่ม padding ให้หัวข้อ */
-        padding-right: 20px;
     }
-    #shop-list {
-        padding: 0 20px; /* เพิ่ม padding ให้รายการร้านค้า */
+    .tabs {
+        display: flex;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 20px;
+    }
+    .tab-button {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        background-color: transparent;
+        font-size: 1em;
+        font-weight: bold;
+        color: #666;
+        border-bottom: 3px solid transparent;
+    }
+    .tab-button.active {
+        color: #00529B; 
+        border-bottom-color: #00529B;
+    }
+    .shop-list {
+        display: none; 
+    }
+    .shop-list.active {
+        display: block; 
     }
     .shop-card { 
         background-color: #ffffff;
@@ -38,32 +58,34 @@
         width: 100px; 
         height: 100px; 
         object-fit: cover;
-        flex-shrink: 0; /* ป้องกันไม่ให้รูปหด */
     }
     .shop-card-body { 
-        padding: 12px 16px;
+        padding: 16px;
         flex-grow: 1;
         display: flex;
-        flex-direction: column; /* จัดเรียงเป็นแนวตั้ง */
-        justify-content: center; /* จัดให้อยู่กลางๆ */
-        align-items: flex-start; /* จัดชิดซ้าย */
+        justify-content: space-between;
+        align-items: center;
     }
     .shop-info h3 { 
-        margin: 0 0 4px 0;
+        margin: 0 0 8px 0;
         font-size: 1.1em;
         color: #001F3F;
-        line-height: 1.3;
     }
     .shop-info p {
-        margin: 0 0 8px 0;
+        margin: 0;
         font-size: 0.9em;
         color: #666;
     }
-    .shop-card-body a {
-        font-size: 0.9em;
-        text-decoration: none;
-        color: #007bff;
-        font-weight: bold;
+    .shop-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.5em; 
+        padding: 5px;
+        color: #888;
+    }
+    .shop-actions button.favorite {
+        color: #e53935; 
     }
     #status-message { 
         text-align: center; 
@@ -73,98 +95,95 @@
 </style>
 </head>
 <body>
-
     <h1>ร้านที่บันทึกไว้ดูภายหลัง</h1>
-    <div id="status-message">กำลังโหลดข้อมูล...</div>
-    <div id="shop-list"></div>
+<div id="status-message">กำลังโหลดข้อมูล...</div>
+<div id="shop-list"></div>
 
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD0YYQ20oVduEaVNtJNNnEd2YCufwaScMw",
-            authDomain: "linebot-mrt.firebaseapp.com",
-            projectId: "linebot-mrt",
-            storageBucket: "linebot-mrt.firebasestorage.app",
-            messagingSenderId: "363062225176",
-            appId: "1:363062225176:web:54a8666def4777a995966d",
-            measurementId: "G-YXH7T1DHBG"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        async function main() {
-            try {
-                await liff.init({ liffId: "2007704697-mv4GBn6P" });
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-                if (!liff.isLoggedIn()) {
-                    document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อใช้งาน";
-                    return;
-                }
 
-                const profile = await liff.getProfile();
-                const userId = profile.userId;
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-                const watchLaterRef = collection(db, "users", userId, "watch_later");
-                const q = query(watchLaterRef, orderBy("addedAt", "desc")); 
-                const watchLaterSnapshot = await getDocs(q);
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyD0YYQ20oVduEaVNtJNNnEd2YCufwaScMw",
+        authDomain: "linebot-mrt.firebaseapp.com",
+        projectId: "linebot-mrt",
+        storageBucket: "linebot-mrt.firebasestorage.app",
+        messagingSenderId: "363062225176",
+        appId: "1:363062225176:web:54a8666def4777a995966d",
+        measurementId: "G-YXH7T1DHBG"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    
+    async function main() {
+        try {
+            
+            await liff.init({ liffId: "2007704697-mv4GBn6P" });
+
+            if (!liff.isLoggedIn()) {
+                document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อใช้งาน";
                 
-                if (watchLaterSnapshot.empty) {
-                    document.getElementById('status-message').innerText = "คุณยังไม่มีร้านค้าที่บันทึกไว้";
-                    return;
-                }
-                
-                document.getElementById('status-message').style.display = 'none';
-                const shopListDiv = document.getElementById('shop-list');
-                const apiKey = "AIzaSyBH36E5QBMKsmQiFE9ustbfF1i_S5-Hqy8"; // API Key ที่คุณให้มา
+                return;
+            }
 
-                for (const docSnapshot of watchLaterSnapshot.docs) {
-                    const shopId = docSnapshot.id;
-                    const shopRef = doc(db, "shops", shopId); 
-                    const shopDoc = await getDoc(shopRef);
+            const profile = await liff.getProfile();
+            const userId = profile.userId;
 
-                    if (shopDoc.exists()) {
-                        const shopData = shopDoc.data();
-                        
-                        // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
+            
+            const watchLaterRef = collection(db, "users", userId, "watch_later");
+            const q = query(watchLaterRef, orderBy("addedAt", "desc")); 
+            
+            const watchLaterSnapshot = await getDocs(q);
+            
+            if (watchLaterSnapshot.empty) {
+                document.getElementById('status-message').innerText = "คุณยังไม่มีร้านค้าที่บันทึกไว้";
+                return;
+            }
+            
+            document.getElementById('status-message').style.display = 'none';
+            const shopListDiv = document.getElementById('shop-list');
+            const apiKey = "AIzaSyBH36E5QBMKsmQiFE9ustbfF1i_S5-Hqy8"; 
 
-                        // 1. จัดการเรื่อง "ที่อยู่" (Address)
-                        const address = shopData.vicinity || 'ไม่ระบุที่อยู่';
+            // วนลูปเพื่อดึงข้อมูลร้านค้าทีละร้าน
+            for (const docSnapshot of watchLaterSnapshot.docs) {
+                const shopId = docSnapshot.id;
+                const shopRef = doc(db, "shops", shopId); 
+                const shopDoc = await getDoc(shopRef);
 
-                        // 2. จัดการเรื่อง "รูปภาพ" (Image)
-                        let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
-                        if (shopData.photos && shopData.photos.length > 0) {
-                            imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${shopData.photos[0].photo_reference}&key=${apiKey}`;
-                        }
-                        
-                        // --- ^^^^^^ END: ส่วนที่แก้ไข ^^^^^^ ---
+                if (shopDoc.exists()) {
+                    const shopData = shopDoc.data();
+                    
+                    const imageUrl = shopData.imageUrl || "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+                    
 
-                        const card = document.createElement('div');
-                        card.className = 'shop-card';
-                        card.innerHTML = `
-                            <img src="${imageUrl}" alt="${shopData.name}">
-                            <div class="shop-card-body">
-                                <div class="shop-info">
-                                    <h3>${shopData.name}</h3>
-                                    <p>${address}</p>
-                                </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopId}" target="_blank">เปิดใน Google Maps</a>
-                            </div>
-                        `;
+                    const card = document.createElement('div');
+                    card.className = 'shop-card';
+                   card.innerHTML = `
+                        <img src="${imageUrl}" alt="${shopData.name}">
+                        <div class="shop-card-body">
+                             <h3>${shopData.name}</h3>
+                            <p>${shopData.address}</p>
+                            <a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopId}" target="_blank">เปิดใน Google Maps</a>
+                        </div>
+                    `;
                         shopListDiv.appendChild(card);
                     } else {
                         console.warn(`Shop with ID ${shopId} not found in 'shops' collection.`);
                     }
-                }
-            } catch (error) {
-                console.error('An error occurred in LIFF app:', error);
-                document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
             }
+        } catch (error) {
+            console.error('An error occurred in LIFF app:', error);
+            document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
         }
-        
-        main();
-    </script>
+    }
+    
+    main();
+</script>
 </body>
 </html>
