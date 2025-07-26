@@ -160,7 +160,21 @@
                     if (shopDoc.exists()) {
                         const shopData = shopDoc.data();
                         
-                        const imageUrl = shopData.imageUrl || "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+                        // --- VVVVVV START: ส่วนที่แก้ไขทั้งหมด VVVVVV ---
+                        
+                        const apiKey = "AIzaSyBH36E5QBMKsmQiFE9ustbfF1i_S5-Hqy8"; // ใส่ API Key ของ Google Maps ของคุณ
+
+                        // 1. จัดการเรื่อง "ที่อยู่" (Address)
+                        // ลองหาจาก vicinity ก่อน, ถ้าไม่มีก็หาจาก address, ถ้าไม่มีอีกก็บอกว่า 'ไม่ระบุที่อยู่'
+                        const address = shopData.vicinity || shopData.address || 'ไม่ระบุที่อยู่';
+
+                        // 2. จัดการเรื่อง "รูปภาพ" (Image)
+                        let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+                        if (shopData.photos && shopData.photos.length > 0 && shopData.photos[0].photo_reference) {
+                            // สร้าง URL จากข้อมูล photos ที่บอทบันทึก
+                            const photoReference = shopData.photos[0].photo_reference;
+                            imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
+                        }
                         
 
                         const card = document.createElement('div');

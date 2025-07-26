@@ -260,6 +260,38 @@ app.post('/callback', line.middleware(config), (req, res) => {
 const handleEvent = async (event) => {
     const userId = event.source.userId;
 
+     if (event.type === 'follow') {
+        try {
+            // 1. ดึงข้อมูลโปรไฟล์จาก LINE
+            const profile = await client.getProfile(userId);
+            
+            // 2. เตรียมข้อมูลที่จะบันทึก
+            const userRef = db.collection('users').doc(userId);
+            
+            // 3. บันทึกข้อมูลลง Firestore
+            await userRef.set({
+                line_userId: userId,
+                displayName: profile.displayName,
+                pictureUrl: profile.pictureUrl,
+                statusMessage: profile.statusMessage || null, // บางคนอาจไม่มี status message
+                followedAt: new Date() // บันทึกเวลาที่แอดเพื่อน
+            }, { merge: true }); // ใช้ merge: true เพื่อไม่ให้ข้อมูลเก่า (เช่น ร้านโปรด) หายไป
+
+            console.log(`User ${profile.displayName} has followed the bot and profile is saved.`);
+
+            // 4. ส่งข้อความต้อนรับ
+            return client.replyMessage(event.replyToken, {
+                type: 'text',
+                text: `สวัสดีค่ะคุณ ${profile.displayName}! ขอบคุณที่เพิ่มเพื่อนนะคะ ยินดีให้บริการค่ะ 😊`
+            });
+            
+        } catch (error) {
+            console.error('Error handling follow event:', error);
+            // ถ้าเกิด Error ก็ให้จบการทำงานไปเงียบๆ
+            return Promise.resolve(null);
+        }
+    }
+
     if (event.type === 'postback') {
         const data = event.postback.data;
         const params = new URLSearchParams(data);
