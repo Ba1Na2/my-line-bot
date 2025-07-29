@@ -33,7 +33,7 @@ const sessionClient = new dialogflow.SessionsClient({
     keyFilename: DIALOGFLOW_KEY_FILE
 });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
 
 
 const app = express();
