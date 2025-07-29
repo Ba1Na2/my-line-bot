@@ -162,7 +162,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     {
                         type: 'box',
                         layout: 'horizontal',
-                        backgroundColor: '#007BFF', // สีน้ำเงิน
+                        backgroundColor: '#dfeeffff', // สีน้ำเงิน
                         cornerRadius: 'md',
                         paddingAll: 'md',
                         justifyContent: 'center',
@@ -180,15 +180,15 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                             // <<< ปุ่ม "ร้านโปรด" >>>
                             { 
                                 type: 'box', layout: 'horizontal', cornerRadius: 'md', 
-                                backgroundColor: '#FFD1DC', // สีชมพูอ่อน
+                                backgroundColor: '#ff9fb5ff', // สีชมพูอ่อน
                                 paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
                                 action: { type: 'postback', label: 'add_favorite', data: `action=add_favorite&shop_id=${placeId}` },
-                                contents: [ { type: 'text', text: 'ร้านโปรด', color: '#C71585', weight: 'bold', size: 'sm', align: 'center' } ]
+                                contents: [ { type: 'text', text: '💓', color: '#C71585', weight: 'bold', size: 'sm', align: 'center' } ]
                             },
                             // <<< ปุ่ม "ดูภายหลัง" >>>
                             { 
                                 type: 'box', layout: 'horizontal', cornerRadius: 'md', 
-                                backgroundColor: '#F5F5F5', // สีเทาอ่อน
+                                backgroundColor: '#ffd1f8ff', // สีเทาอ่อน
                                 paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
                                 action: { type: 'postback', label: 'add_watch_later', data: `action=add_watch_later&shop_id=${placeId}` },
                                 contents: [ { type: 'text', text: 'ดูภายหลัง', color: '#333333', weight: 'bold', size: 'sm', align: 'center' } ]
@@ -210,9 +210,9 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             type: 'bubble',
             body: { 
                 type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', paddingAll: 'xl',
-                backgroundColor: '#28A745', // สีเขียว
+                backgroundColor: '#ffffffff', 
                 action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
-                contents: [ { type: 'text', text: 'แสดงเพิ่มเติม', color: '#FFFFFF', weight: 'bold' } ]
+                contents: [ { type: 'text', text: 'แสดงเพิ่มเติม', color: '#575757ff', weight: 'bold' } ]
             }
         };
         bubbles.push(loadMoreBubble);
@@ -231,6 +231,19 @@ async function callGemini(prompt) {
         return text;
     } catch (error) {
         console.error('ERROR CALLING GEMINI API:', error);
+
+        // --- VVVVVV START: ส่วนที่เพิ่มเข้ามา VVVVVV ---
+        // ตรวจสอบว่าเป็น Error ประเภท "Service Unavailable" หรือไม่
+        if (error.status === 503) {
+            return "ตอนนี้มีผู้ใช้งานพร้อมกันจำนวนมาก ทำให้ฉันตอบกลับช้ากว่าปกติ กรุณาลองใหม่อีกครั้งในสักครู่นะ";
+        }
+        // ตรวจสอบว่าเป็น Error ประเภท "Not Found" (เผื่อไว้ในอนาคต)
+        if (error.status === 404) {
+            return "ขออภัย ตอนนี้ฉันไม่สามารถเชื่อมต่อกับระบบ AI ได้ กรุณาแจ้งผู้ดูแล";
+        }
+        // --- ^^^^^^ END: ส่วนที่เพิ่มเข้ามา ^^^^^^ ---
+
+        // ตอบข้อความกลางๆ สำหรับ Error ประเภทอื่นๆ ที่เราไม่รู้จัก
         return "ขออภัย ตอนนี้ฉันอาจจะยังไม่ค่อยเข้าใจ ลองถามคำถามอื่นได้ไหมคะ";
     }
 }
