@@ -6,6 +6,7 @@ const firebase = require('firebase-admin');
 const { Client } = require("@googlemaps/google-maps-services-js");
 const dialogflow = require('@google-cloud/dialogflow');
 const { v4: uuidv4 } = require('uuid');
+const { GoogleGenerativeAI } = require("@google/generative-ai"); 
 
 require('dotenv').config();
 
@@ -26,11 +27,14 @@ const db = firebase.firestore();
 
 const googleMapsClient = new Client({});
 
-const DIALOGFLOW_PROJECT_ID = 'linebot-mrt'; // <<< สำคัญ: แก้เป็น Project ID ของคุณ
+const DIALOGFLOW_PROJECT_ID = 'linebot-mrt';
 const DIALOGFLOW_KEY_FILE = './dialogflow-key.json';
 const sessionClient = new dialogflow.SessionsClient({
     keyFilename: DIALOGFLOW_KEY_FILE
 });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+
 
 const app = express();
 app.use(express.static('public'));
@@ -38,7 +42,6 @@ app.use(express.static('public'));
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
-    "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
     "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
     "สีลม": {"lat": 13.729908, "lng": 100.535898},
     "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
@@ -76,7 +79,7 @@ const MRT_BLUE_LINE_STATIONS = {
     "สามยอด": {"lat": 13.747199, "lng": 100.503276},
     "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
     "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
-};
+    };
 
 async function detectIntent(userId, text) {
     const sessionId = uuidv4();
@@ -118,20 +121,19 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
 
 function createShopCarousel(places, apiKey, hasNextPage) {
     if (!places || places.length === 0) {
-        return { type: 'text', text: 'ขออภัยค่ะ ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
+        return { type: 'text', text: 'ขออภัย ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
 
     const bubbles = places.map(place => {
-        // ตรวจสอบข้อมูลให้ดีขึ้น
         if (!place || !place.place_id) {
-            return null; // ข้าม bubble ที่ข้อมูลไม่ถูกต้อง
+            return null;
         }
 
         const placeId = place.place_id;
         const name = place.name;
         const address = place.vicinity || 'ไม่ระบุที่อยู่';
         const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
-        let imageUrl = "https://www. மேல்-level-seo.com/wp-content/uploads/2019/08/no-image-found.png";
+        let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
         
         if (place.photos && place.photos.length > 0) {
             const photoReference = place.photos[0].photo_reference;
@@ -150,101 +152,88 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
                 ]
             },
-            // --- VVVVVV START: ส่วน Footer ที่แก้ไขใหม่ทั้งหมด VVVVVV ---
+            // --- VVVVVV START: ส่วน Footer ที่ปรับปรุงสี VVVVVV ---
             footer: {
                 type: 'box',
                 layout: 'vertical',
                 spacing: 'md',
                 contents: [
+                    // <<< ปุ่ม "ดูบนแผนที่" แบบมีสี >>>
                     {
-                        type: 'button',
-                        style: 'link',
-                        height: 'sm',
+                        type: 'box',
+                        layout: 'horizontal',
+                        backgroundColor: '#007BFF', // สีน้ำเงิน
+                        cornerRadius: 'md',
+                        paddingAll: 'md',
+                        justifyContent: 'center',
                         action: {
                             type: 'uri',
-                            label: '📍 ดูบนแผนที่',
+                            label: 'ดูบนแผนที่',
                             uri: gmapsUrl
-                        }
-                    },
-                    {
-                        type: 'box', // ใช้ box ครอบเพื่อให้ปุ่มอยู่แนวนอน
-                        layout: 'horizontal',
-                        spacing: 'sm',
+                        },
                         contents: [
-                            { // ปุ่ม "ร้านโปรด" (ทำเหมือนปุ่มจริง)
-                                type: 'box',
-                                layout: 'horizontal',
-                                cornerRadius: 'md',
-                                backgroundColor: '#FFF0F5', // สีชมพูอ่อน
-                                paddingAll: 'md',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                flex: 1, // ทำให้ปุ่มขยายเท่ากัน
-                                action: {
-                                    type: 'postback',
-                                    label: 'add_favorite', // label สำหรับ accessibility
-                                    data: `action=add_favorite&shop_id=${placeId}`
-                                },
-                                contents: [
-                                     { type: 'text', text: '❤️', flex: 0, margin: 'none', size: 'sm' },
-                                     { type: 'text', text: 'ร้านโปรด', color: '#E83E8C', margin: 'md', weight: 'bold', size: 'sm' }
-                                ]
+                            { type: 'text', text: 'ดูบนแผนที่', color: '#FFFFFF', weight: 'bold', size: 'sm' }
+                        ]
+                    },
+                    { type: 'box', layout: 'horizontal', spacing: 'sm',
+                        contents: [
+                            // <<< ปุ่ม "ร้านโปรด" >>>
+                            { 
+                                type: 'box', layout: 'horizontal', cornerRadius: 'md', 
+                                backgroundColor: '#FFD1DC', // สีชมพูอ่อน
+                                paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
+                                action: { type: 'postback', label: 'add_favorite', data: `action=add_favorite&shop_id=${placeId}` },
+                                contents: [ { type: 'text', text: 'ร้านโปรด', color: '#C71585', weight: 'bold', size: 'sm', align: 'center' } ]
                             },
-                            { // ปุ่ม "ดูภายหลัง" (ทำเหมือนปุ่มจริง)
-                                type: 'box',
-                                layout: 'horizontal',
-                                cornerRadius: 'md',
-                                borderWidth: '1px',
-                                borderColor: '#CCCCCC',
-                                paddingAll: 'md',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                flex: 1, // ทำให้ปุ่มขยายเท่ากัน
-                                action: {
-                                    type: 'postback',
-                                    label: 'add_watch_later',
-                                    data: `action=add_watch_later&shop_id=${placeId}`
-                                },
-                                contents: [
-                                    { type: 'text', text: '🔖', flex: 0, margin: 'none', size: 'sm' },
-                                    { type: 'text', text: 'ดูภายหลัง', color: '#555555', margin: 'md', weight: 'bold', size: 'sm' }
-                                ]
+                            // <<< ปุ่ม "ดูภายหลัง" >>>
+                            { 
+                                type: 'box', layout: 'horizontal', cornerRadius: 'md', 
+                                backgroundColor: '#F5F5F5', // สีเทาอ่อน
+                                paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
+                                action: { type: 'postback', label: 'add_watch_later', data: `action=add_watch_later&shop_id=${placeId}` },
+                                contents: [ { type: 'text', text: 'ดูภายหลัง', color: '#333333', weight: 'bold', size: 'sm', align: 'center' } ]
                             }
                         ]
                     }
                 ]
             }
-            // --- ^^^^^^ END: ส่วน Footer ที่แก้ไขใหม่ทั้งหมด ^^^^^^ ---
         };
-    }).filter(bubble => bubble !== null); // กรองเอา bubble ที่เป็น null ออก
+    }).filter(bubble => bubble !== null);
 
-    // ตรวจสอบอีกครั้งหลังจากกรองแล้ว
     if (bubbles.length === 0) {
-        return { type: 'text', text: 'ขออภัยค่ะ มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
+        return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
     }
 
-    if (hasNextPage) {
+     if (hasNextPage) {
+        // <<< ปุ่ม "แสดงเพิ่มเติม" แบบมีสี >>>
         const loadMoreBubble = {
             type: 'bubble',
-            body: {
-                type: 'box',
-                layout: 'vertical',
-                spacing: 'sm',
-                contents: [
-                    { type: 'button', flex: 1, gravity: 'center',
-                      action: { type: 'postback', label: 'แสดงเพิ่มเติม ➡️', data: 'action=next_page' } }
-                ]
+            body: { 
+                type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', paddingAll: 'xl',
+                backgroundColor: '#28A745', // สีเขียว
+                action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
+                contents: [ { type: 'text', text: 'แสดงเพิ่มเติม', color: '#FFFFFF', weight: 'bold' } ]
             }
         };
         bubbles.push(loadMoreBubble);
     }
 
-    return {
-        type: 'flex',
-        altText: 'ผลการค้นหาร้านค้า',
-        contents: { type: 'carousel', contents: bubbles }
-    };
+    return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 };
+
+async function callGemini(prompt) {
+    try {
+        console.log(`Sending to Gemini: "${prompt}"`);
+        const result = await geminiModel.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        console.log('Got response from Gemini.');
+        return text;
+    } catch (error) {
+        console.error('ERROR CALLING GEMINI API:', error);
+        return "ขออภัย ตอนนี้ฉันอาจจะยังไม่ค่อยเข้าใจ ลองถามคำถามอื่นได้ไหมคะ";
+    }
+}
 
 // ----- 3. WEBHOOK ENDPOINT -----
 app.get('/callback', (req, res) => { res.status(200).send('OK'); });
@@ -260,35 +249,27 @@ app.post('/callback', line.middleware(config), (req, res) => {
 const handleEvent = async (event) => {
     const userId = event.source.userId;
 
-     if (event.type === 'follow') {
+    if (event.type === 'follow') {
         try {
-            // 1. ดึงข้อมูลโปรไฟล์จาก LINE
             const profile = await client.getProfile(userId);
-            
-            // 2. เตรียมข้อมูลที่จะบันทึก
             const userRef = db.collection('users').doc(userId);
-            
-            // 3. บันทึกข้อมูลลง Firestore
             await userRef.set({
                 line_userId: userId,
                 displayName: profile.displayName,
                 pictureUrl: profile.pictureUrl,
-                statusMessage: profile.statusMessage || null, // บางคนอาจไม่มี status message
-                followedAt: new Date() // บันทึกเวลาที่แอดเพื่อน
-            }, { merge: true }); // ใช้ merge: true เพื่อไม่ให้ข้อมูลเก่า (เช่น ร้านโปรด) หายไป
+                statusMessage: profile.statusMessage || null,
+                followedAt: new Date()
+            }, { merge: true });
 
             console.log(`User ${profile.displayName} has followed the bot and profile is saved.`);
 
-            // 4. ส่งข้อความต้อนรับ
             return client.replyMessage(event.replyToken, {
                 type: 'text',
-                text: `สวัสดีค่ะคุณ ${profile.displayName}! ขอบคุณที่เพิ่มเพื่อนนะคะ ยินดีให้บริการค่ะ 😊`
-
+                text: `สวัสดีคุณ ${profile.displayName}! ขอบคุณที่เพิ่มเพื่อน ยินดีให้บริการ`
             });
             
         } catch (error) {
             console.error('Error handling follow event:', error);
-            // ถ้าเกิด Error ก็ให้จบการทำงานไปเงียบๆ
             return Promise.resolve(null);
         }
     }
@@ -301,52 +282,44 @@ const handleEvent = async (event) => {
         if (action === 'add_favorite' || action === 'add_watch_later') {
             const shopId = params.get('shop_id');
             const collectionName = action === 'add_favorite' ? 'favorites' : 'watch_later';
-            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว! ❤️' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้วครับ 🔖';
+            const replyText = action === 'add_favorite' ? 'บันทึกร้านนี้เป็นร้านโปรดของคุณเรียบร้อยแล้ว' : 'บันทึกร้านนี้ไว้ดูภายหลังเรียบร้อยแล้ว';
             
             const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
             await docRef.set({ addedAt: new Date() });
             return client.replyMessage(event.replyToken, { type: 'text', text: replyText });
         } 
-        
-        // --- **เพิ่ม Logic นี้เข้าไป** ---
         else if (action === 'next_page') {
             const userStateRef = db.collection('users').doc(userId);
             const userDoc = await userStateRef.get();
             
-            // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
-            // แก้ไขการตรวจสอบข้อมูลเล็กน้อย
             if (!userDoc.exists || !userDoc.data().currentSearch) {
-                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัยค่ะ ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่ค่ะ' });
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'ขออภัย ไม่พบข้อมูลการค้นหาล่าสุดของคุณ กรุณาค้นหาใหม่' });
             }
 
             const currentSearch = userDoc.data().currentSearch;
-            const currentPage = currentSearch.currentPage || 1; // ให้มีค่าเริ่มต้น
+            const currentPage = currentSearch.currentPage || 1;
             const startIndex = currentPage * 5;
             
             if (startIndex >= currentSearch.placeIds.length) {
-                 return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+                 return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้ว' });
             }
             
             const nextPlaceIds = currentSearch.placeIds.slice(startIndex, startIndex + 5);
 
             if (nextPlaceIds.length === 0) {
-                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้วค่ะ' });
+                return client.replyMessage(event.replyToken, { type: 'text', text: 'นี่คือผลการค้นหาสุดท้ายแล้ว' });
             }
 
-            // ดึงข้อมูล shop ที่สมบูรณ์จาก Firestore
             const shopPromises = nextPlaceIds.map(id => db.collection('shops').doc(id).get());
             const shopDocs = await Promise.all(shopPromises);
             const placesToShow = shopDocs
                 .filter(doc => doc.exists)
-                .map(doc => doc.data()); // ใช้ .data() เพื่อเอา object ที่สมบูรณ์ออกมา
+                .map(doc => doc.data());
 
             const hasNextPage = currentSearch.placeIds.length > startIndex + 5;
             const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
 
-            // อัปเดต page ต่อไป
             await userStateRef.update({ 'currentSearch.currentPage': currentPage + 1 });
-            // --- ^^^^^^ END: ส่วนที่แก้ไข ^^^^^^ ---
-
             return client.replyMessage(event.replyToken, replyMessageObject);
         }
     }
@@ -358,7 +331,16 @@ const handleEvent = async (event) => {
     const textFromUser = event.message.text.trim();
     const dfResult = await detectIntent(userId, textFromUser);
 
-    if (dfResult && dfResult.intent && dfResult.intent.displayName === 'FindPlaces') {
+    if (!dfResult || !dfResult.intent) {
+        console.log("Could not detect intent. Calling Gemini as fallback.");
+        const geminiResponse = await callGemini(textFromUser);
+        return client.replyMessage(event.replyToken, { type: 'text', text: geminiResponse });
+    }
+
+    const intentName = dfResult.intent.displayName;
+    console.log(`Detected Intent: ${intentName}`);
+
+    if (intentName === 'FindPlaces') {
         const params = dfResult.parameters.fields;
         const cuisine = params.cuisine ? params.cuisine.stringValue : 'ร้านอาหาร';
         const station = params.mrt_station ? params.mrt_station.stringValue : '';
@@ -366,7 +348,7 @@ const handleEvent = async (event) => {
         if (dfResult.fulfillmentText && !dfResult.allRequiredParamsPresent) {
             return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
         }
-
+        
         if (station && MRT_BLUE_LINE_STATIONS[station]) {
             const stationInfo = MRT_BLUE_LINE_STATIONS[station];
             const fullSearchQuery = `${cuisine} ${station}`;
@@ -376,16 +358,13 @@ const handleEvent = async (event) => {
                 const batch = db.batch();
                 allPlaces.forEach(place => {
                     const shopRef = db.collection('shops').doc(place.place_id);
-                     // --- VVVVVV START: ส่วนที่แก้ไข VVVVVV ---
-                    // บันทึกข้อมูลที่จำเป็นทั้งหมดลง Firestore
                     batch.set(shopRef, {
-                        place_id: place.place_id, // สำคัญมาก
+                        place_id: place.place_id,
                         name: place.name || 'ไม่มีชื่อ',
                         vicinity: place.vicinity || 'ไม่ระบุที่อยู่',
                         rating: place.rating || null,
-                        photos: place.photos || null // บันทึกข้อมูลรูปภาพไปด้วย
+                        photos: place.photos || null
                     }, { merge: true });
-                    // --- ^^^^^^ END: ส่วนที่แก้ไข ^^^^^^ ---
                 });
                 await batch.commit();
 
@@ -406,15 +385,22 @@ const handleEvent = async (event) => {
             const replyMessageObject = createShopCarousel(placesToShow, process.env.GOOGLE_API_KEY, hasNextPage);
             
             return client.replyMessage(event.replyToken, replyMessageObject);
+
         } else {
-             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัยค่ะ ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
+             return client.replyMessage(event.replyToken, { type: 'text', text: `ขออภัย ไม่พบข้อมูลของสถานี ${station || 'ที่คุณระบุ'}` });
         }
+    } 
+    else if (intentName === 'Default Fallback Intent') {
+        const geminiResponse = await callGemini(dfResult.queryText);
+        return client.replyMessage(event.replyToken, { type: 'text', text: geminiResponse });
     }
-    
-    if (dfResult && dfResult.fulfillmentText) {
+    else if (dfResult.fulfillmentText) {
         return client.replyMessage(event.replyToken, { type: 'text', text: dfResult.fulfillmentText });
-    } else {
-        return client.replyMessage(event.replyToken, { type: 'text', text: "ขออภัยค่ะ ฉันไม่เข้าใจจริงๆ ลองใหม่อีกครั้งนะคะ" });
+    } 
+    else {
+        console.log("Unhandled case. Calling Gemini as final fallback.");
+        const geminiResponse = await callGemini(dfResult.queryText);
+        return client.replyMessage(event.replyToken, { type: 'text', text: geminiResponse });
     }
 };
 
