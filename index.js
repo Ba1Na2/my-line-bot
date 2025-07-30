@@ -136,8 +136,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         return { type: 'text', text: 'ขออภัย ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
 
-
- const bubbles = places.map(place => {
+    const bubbles = places.map(place => {
         if (!place || !place.place_id) return null;
 
         const placeId = place.place_id;
@@ -175,30 +174,16 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                         type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
                         contents: [
                             {
-                                type: 'box',
-                                layout: 'vertical',
-                                flex: 1,
-                                backgroundColor: '#f0f0f0',
-                                cornerRadius: 'md',
-                                paddingAll: 'md', 
-                                justifyContent: 'center',
+                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: '#f0f0f0', cornerRadius: 'md',
+                                paddingAll: 'md', justifyContent: 'center',
                                 action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` },
-                                contents: [
-                                    { type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }
-                                ]
+                                contents: [{ type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
                             },
                              {
-                                type: 'box',
-                                layout: 'vertical',
-                                flex: 1,
-                                backgroundColor: '#f0f0f0',
-                                cornerRadius: 'md',
-                                paddingAll: 'md', 
-                                justifyContent: 'center',
+                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: '#f0f0f0', cornerRadius: 'md',
+                                paddingAll: 'md', justifyContent: 'center',
                                 action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` },
-                                contents: [
-                                    { type: 'text', text: 'ดูภายหลัง', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }
-                                ]
+                                contents: [{ type: 'text', text: 'ดูภายหลัง', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
                             }
                         ]
                     }
@@ -206,30 +191,33 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             }
         };
     }).filter(bubble => bubble !== null);
+
     if (bubbles.length === 0) {
         return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
     }
 
-   if (hasNextPage) {
+    if (hasNextPage) {
         const loadMoreBubble = {
             type: 'bubble',
+            // --- VVVVVV START: ส่วนแก้ไขที่ถูกต้อง VVVVVV ---
             body: { 
-                type: 'box', 
+                // ไม่มี type: 'box' แล้ว
                 layout: 'vertical', 
                 justifyContent: 'center', 
                 alignItems: 'center', 
                 paddingAll: 'xl',
-                backgroundColor: '#e9f2ff', // ใช้สีฟ้าอ่อนจากธีม
+                backgroundColor: '#e9f2ff',
                 action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
                 contents: [ 
                     { 
                         type: 'text', 
                         text: 'แสดงเพิ่มเติม', 
-                        color: theme.primary, // สีน้ำเงินจากธีม
+                        color: theme.primary,
                         weight: 'bold' 
                     } 
                 ]
             }
+            // --- ^^^^^^ END: ส่วนแก้ไขที่ถูกต้อง ^^^^^^ ---
         };
         bubbles.push(loadMoreBubble);
     }
