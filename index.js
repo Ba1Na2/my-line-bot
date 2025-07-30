@@ -40,6 +40,7 @@ const app = express();
 app.use(express.static('public'));
 
 
+
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
     "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
@@ -241,7 +242,7 @@ async function callGemini(prompt) {
         if (error.status === 404) {
             return "ขออภัย ตอนนี้ฉันไม่สามารถเชื่อมต่อกับระบบ AI ได้ กรุณาแจ้งผู้ดูแล";
         }
-        // --- ^^^^^^ END: ส่วนที่เพิ่มเข้ามา ^^^^^^ ---
+        
 
         // ตอบข้อความกลางๆ สำหรับ Error ประเภทอื่นๆ ที่เราไม่รู้จัก
         return "ขออภัย ตอนนี้ฉันอาจจะยังไม่ค่อยเข้าใจ ลองถามคำถามอื่นได้ไหมคะ";
@@ -256,6 +257,58 @@ app.post('/callback', line.middleware(config), (req, res) => {
         .all(req.body.events.map(handleEvent))
         .then((result) => res.json(result))
         .catch((err) => { console.error(err); res.status(500).end(); });
+});
+
+// --- VVVVVV START: Endpoint สำหรับ LIFF App (ฉบับแก้ไข) VVVVVV ---
+app.get('/get-saved-shops', async (req, res) => {
+    try {
+        const { userId, type } = req.query; 
+        
+        if (!userId || !type) {
+            return res.status(400).json({ error: 'Missing userId or type' });
+        }
+        
+        // ใช้ Syntax ของ Firebase Admin SDK
+        const collectionName = type;
+        const savedRef = db.collection('users').doc(userId).collection(collectionName);
+        const query = savedRef.orderBy("addedAt", "desc");
+        const savedSnapshot = await query.get();
+
+        if (savedSnapshot.empty) {
+            return res.json({ shops: [] }); 
+        }
+
+        const shopPromises = savedSnapshot.docs.map(docSnapshot => {
+            const shopId = docSnapshot.id;
+            // ใช้ Syntax ของ Firebase Admin SDK
+            return db.collection("shops").doc(shopId).get();
+        });
+
+        const shopDocs = await Promise.all(shopPromises);
+        
+        const shopsData = shopDocs
+            .filter(doc => doc.exists)
+            .map(doc => {
+                const shopData = doc.data();
+                const apiKey = process.env.GOOGLE_API_KEY; 
+                let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
+                if (shopData.photos && shopData.photos.length > 0) {
+                    imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${shopData.photos[0].photo_reference}&key=${apiKey}`;
+                }
+                return {
+                    id: doc.id,
+                    name: shopData.name,
+                    address: shopData.vicinity,
+                    imageUrl: imageUrl,
+                };
+            });
+
+        res.json({ shops: shopsData });
+
+    } catch (error) {
+        console.error('Error fetching saved shops:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 // ----- 4. EVENT HANDLER -----
