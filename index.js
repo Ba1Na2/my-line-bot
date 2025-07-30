@@ -122,7 +122,7 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
 
 function createShopCarousel(places, apiKey, hasNextPage) {
     // Theme Colors
-    const theme = {
+     const theme = {
         primary: '#0D6EFD',
         secondary: '#6C757D',
         background: '#F8F9FA',
@@ -130,7 +130,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         textPrimary: '#212529',
         textSecondary: '#6C757D',
         accent: '#FFC107',
-        favorite: '#E83E8C' // สีชมพูสำหรับร้านโปรดยังคงไว้ได้
+        favorite: '#E83E8C'
     };
 
     if (!places || places.length === 0) {
@@ -184,13 +184,33 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     {
                         type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
                         contents: [
+                            // <<< ปุ่ม "ร้านโปรด": เปลี่ยนกลับไปใช้ Box Component >>>
                             {
-                                type: 'button', style: 'secondary', color: '#FFFFFF', height: 'sm', flex: 1,
-                                action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` }
+                                type: 'box',
+                                layout: 'vertical',
+                                flex: 1,
+                                backgroundColor: '#f0f0f0', // สีพื้นหลังเทาอ่อน
+                                cornerRadius: 'md',
+                                height: 'sm',
+                                justifyContent: 'center',
+                                action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` },
+                                contents: [
+                                    { type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }
+                                ]
                             },
+                            // <<< ปุ่ม "ดูภายหลัง": เปลี่ยนกลับไปใช้ Box Component >>>
                              {
-                                type: 'button', style: 'secondary', color: '#FFFFFF', height: 'sm', flex: 1,
-                                action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` }
+                                type: 'box',
+                                layout: 'vertical',
+                                flex: 1,
+                                backgroundColor: '#f0f0f0', // สีพื้นหลังเทาอ่อน
+                                cornerRadius: 'md',
+                                height: 'sm',
+                                justifyContent: 'center',
+                                action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` },
+                                contents: [
+                                    { type: 'text', text: 'ดูภายหลัง', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }
+                                ]
                             }
                         ]
                     }
