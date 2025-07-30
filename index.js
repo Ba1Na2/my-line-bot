@@ -169,7 +169,15 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             footer: {
                 type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '20px',
                 contents: [
-                    { type: 'button', style: 'primary', color: theme.primary, height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
+                    // --- VVVVVV จุดที่แก้ไข: ลบ 'color' ออกไป VVVVVV ---
+                    {
+                        type: 'button',
+                        style: 'primary', // style primary จะกำหนดสีให้เอง
+                        // color: theme.primary, // <--- ลบบรรทัดนี้ออก
+                        height: 'sm',
+                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl }
+                    },
+                    // --- ^^^^^^ จบจุดที่แก้ไข ^^^^^^ ---
                     {
                         type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
                         contents: [
@@ -199,9 +207,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     if (hasNextPage) {
         const loadMoreBubble = {
             type: 'bubble',
-            // --- VVVVVV START: ส่วนแก้ไขที่ถูกต้อง VVVVVV ---
-            body: { 
-                // ไม่มี type: 'box' แล้ว
+            body: {
                 layout: 'vertical', 
                 justifyContent: 'center', 
                 alignItems: 'center', 
@@ -217,7 +223,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     } 
                 ]
             }
-            // --- ^^^^^^ END: ส่วนแก้ไขที่ถูกต้อง ^^^^^^ ---
         };
         bubbles.push(loadMoreBubble);
     }
