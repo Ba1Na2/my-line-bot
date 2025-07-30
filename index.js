@@ -122,7 +122,7 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
 
 function createShopCarousel(places, apiKey, hasNextPage) {
     // Theme Colors
-     const theme = {
+    const theme = {
         primary: '#0D6EFD',
         secondary: '#6C757D',
         background: '#F8F9FA',
@@ -165,7 +165,9 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                         type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
                         contents: [
                             { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'sm' },
-                            { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary, flex: 0 },
+                            // --- VVVVVV จุดที่แก้ไข: ลบ flex: 0 ออกไป VVVVVV ---
+                            { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
+                            // --- ^^^^^^ จบจุดที่แก้ไข ^^^^^^ ---
                         ]
                     },
                     {
@@ -184,12 +186,11 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     {
                         type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
                         contents: [
-                            // <<< ปุ่ม "ร้านโปรด": เปลี่ยนกลับไปใช้ Box Component >>>
                             {
                                 type: 'box',
                                 layout: 'vertical',
                                 flex: 1,
-                                backgroundColor: '#f0f0f0', // สีพื้นหลังเทาอ่อน
+                                backgroundColor: '#f0f0f0',
                                 cornerRadius: 'md',
                                 height: 'sm',
                                 justifyContent: 'center',
@@ -198,12 +199,11 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                                     { type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }
                                 ]
                             },
-                            // <<< ปุ่ม "ดูภายหลัง": เปลี่ยนกลับไปใช้ Box Component >>>
                              {
                                 type: 'box',
                                 layout: 'vertical',
                                 flex: 1,
-                                backgroundColor: '#f0f0f0', // สีพื้นหลังเทาอ่อน
+                                backgroundColor: '#f0f0f0',
                                 cornerRadius: 'md',
                                 height: 'sm',
                                 justifyContent: 'center',
