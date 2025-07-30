@@ -137,6 +137,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         return { type: 'text', text: 'ขออภัย ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
 
+
     const bubbles = places.map(place => {
         if (!place || !place.place_id) return null;
 
@@ -223,27 +224,34 @@ function createShopCarousel(places, apiKey, hasNextPage) {
         return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
     }
 
-    if (hasNextPage) {
+   if (hasNextPage) {
         const loadMoreBubble = {
             type: 'bubble',
-            backgroundColor: theme.surface,
-            body: {
-                type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center',
-                paddingAll: '20px',
-                contents: [{
-                    type: 'button',
-                    style: 'link',
-                    height: 'sm',
-                    color: theme.primary,
-                    action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' }
-                }]
+            body: { 
+                type: 'box', 
+                layout: 'vertical', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                paddingAll: 'xl',
+                backgroundColor: '#e9f2ff', // ใช้สีฟ้าอ่อนจากธีม
+                // เปลี่ยนจาก button เป็น action ของ box แทน
+                action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
+                contents: [ 
+                    { 
+                        type: 'text', 
+                        text: 'แสดงเพิ่มเติม', 
+                        color: theme.primary, // สีน้ำเงินจากธีม
+                        weight: 'bold' 
+                    } 
+                ]
             }
         };
         bubbles.push(loadMoreBubble);
     }
-
+    
     return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 }
+
 
 async function callGemini(prompt) {
     try {
