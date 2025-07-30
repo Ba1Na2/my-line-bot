@@ -1,47 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>ร้านที่บันทึกไว้</title>
+    <title>ร้านที่บันทึกไว้ - MRT Bot</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f7f9;
-            color: #333333;
+        /* CSS Variables for Theming */
+        :root {
+            --color-primary: #0D6EFD;
+            --color-primary-dark: #00529B;
+            --color-secondary: #6C757D;
+            --color-background: #F8F9FA;
+            --color-surface: #FFFFFF;
+            --color-text-primary: #212529;
+            --color-text-secondary: #6C757D;
+            --color-border: #DEE2E6;
+            --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-        .container {
-            padding: 20px;
+
+        body { 
+            font-family: var(--font-family-sans-serif);
+            margin: 0;
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+        }
+        .header {
+            background-color: var(--color-surface);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         h1 {
-            color: #001F3F;
-            font-size: 1.5em;
-            border-bottom: 2px solid #00529B;
-            padding: 10px 20px;
+            color: var(--color-primary-dark);
+            font-size: 1.25em;
+            padding: 16px 20px;
             margin: 0;
-            background-color: #ffffff;
         }
         .tabs {
             display: flex;
-            border-bottom: 1px solid #ccc;
-            background-color: #ffffff;
+            border-bottom: 1px solid var(--color-border);
             padding: 0 10px;
         }
         .tab-button {
-            padding: 10px 20px;
+            flex: 1;
+            padding: 12px 10px;
             cursor: pointer;
             border: none;
             background-color: transparent;
             font-size: 1em;
-            font-weight: bold;
-            color: #666;
+            font-weight: 600;
+            color: var(--color-text-secondary);
             border-bottom: 3px solid transparent;
-            margin-bottom: -1px; /* ทำให้เส้นขอบล่างพอดีกับเส้นของ tabs */
+            text-align: center;
+            transition: color 0.2s, border-color 0.2s;
         }
         .tab-button.active {
-            color: #00529B; 
-            border-bottom-color: #00529B;
+            color: var(--color-primary); 
+            border-bottom-color: var(--color-primary);
         }
         .content-area {
             padding: 20px;
@@ -50,67 +66,83 @@
             display: none; 
         }
         .shop-list.active {
-            display: block; 
+            display: grid;
+            gap: 16px;
         }
         .shop-card { 
-            background-color: #ffffff;
-            border-radius: 8px; 
-            margin-bottom: 16px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: var(--color-surface);
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             display: flex;
             overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .shop-card:hover {
+            transform: translateY(-2px);
         }
         .shop-card img { 
-            width: 100px; 
-            height: 100px; 
+            width: 120px; 
+            height: 120px; 
             object-fit: cover;
             flex-shrink: 0;
+            border-right: 1px solid var(--color-border);
         }
         .shop-card-body { 
-            padding: 12px 16px;
+            padding: 16px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
         }
         .shop-info h3 { 
             margin: 0 0 4px 0;
             font-size: 1.1em;
-            color: #001F3F;
+            font-weight: 600;
+            color: var(--color-text-primary);
         }
         .shop-info p {
-            margin: 0 0 10px 0;
+            margin: 0 0 12px 0;
             font-size: 0.9em;
-            color: #666;
+            color: var(--color-text-secondary);
             display: -webkit-box;
-            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
             overflow: hidden;
         }
         .map-button {
             display: inline-block;
-            background-color: #007BFF;
+            background-color: var(--color-primary);
             color: white;
-            padding: 6px 12px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 8px;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.9em;
             text-align: center;
             align-self: flex-start;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .map-button:hover {
+            background-color: var(--color-primary-dark);
         }
         #status-message { 
             text-align: center; 
-            padding: 2em;
-            color: #777;
+            padding: 3em;
+            color: var(--color-text-secondary);
+            font-size: 1.1em;
         }
     </style>
 </head>
 <body>
-    <h1>ร้านที่บันทึกไว้</h1>
-    <div class="tabs">
-        <button id="tab-watch_later" class="tab-button active" onclick="showList('watch_later')">ดูภายหลัง</button>
-        <button id="tab-favorites" class="tab-button" onclick="showList('favorites')">ร้านโปรด</button>
+    <div class="header">
+        <h1>ร้านที่บันทึกไว้</h1>
+        <div class="tabs">
+            <button id="tab-watch_later" class="tab-button active" onclick="showList('watch_later')">ดูภายหลัง</button>
+            <button id="tab-favorites" class="tab-button" onclick="showList('favorites')">ร้านโปรด</button>
+        </div>
     </div>
     
     <div class="content-area">
@@ -119,103 +151,53 @@
         <div id="favorites" class="shop-list"></div>
     </div>
 
-
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
     <script>
-        // --- ไม่มีการ import หรือ initialize Firebase อีกต่อไป ---
-
-        let liffProfile = null; // เก็บ profile ไว้ใช้ซ้ำ
-        let loadedTabs = {};   // เก็บสถานะว่า Tab ไหนโหลดแล้ว
-
-        // ฟังก์ชันหลักที่เริ่มทำงานเมื่อเปิดหน้าเว็บ
+        // ... (ส่วน JavaScript เหมือนเดิมทุกประการ ไม่ต้องแก้ไข) ...
+        let liffProfile = null; let loadedTabs = {};
         async function main() {
             try {
-                // 1. Initialize LIFF
                 await liff.init({ liffId: "2007704697-mv4GBn6P" });
-
-                if (!liff.isLoggedIn()) {
-                    document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อดูข้อมูล";
-                    return;
-                }
-
+                if (!liff.isLoggedIn()) { document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อดูข้อมูล"; return; }
                 liffProfile = await liff.getProfile();
-
-                // 2. แสดง Tab เริ่มต้น (ดูภายหลัง)
                 await showList('watch_later');
-
-            } catch (error) {
-                console.error('An error occurred during initialization:', error);
-                document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการเริ่มต้นแอป';
-            }
+            } catch (error) { console.error('An error occurred during initialization:', error); document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการเริ่มต้นแอป'; }
         }
-
-        // ฟังก์ชันสำหรับสลับ Tab
         window.showList = async function(type) {
-            // ซ่อน list และเอา active class ออกจาก tab ทั้งหมด
             document.querySelectorAll('.shop-list').forEach(list => list.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-
-            // แสดง list ที่เลือกและเพิ่ม active class ให้ tab
             document.getElementById(type).classList.add('active');
             document.getElementById(`tab-${type}`).classList.add('active');
-            
-            // ถ้า Tab นี้ยังไม่เคยโหลดข้อมูล ให้โหลด
-            if (!loadedTabs[type]) {
-                await loadShopData(type);
-                loadedTabs[type] = true; // Mark ว่าโหลดแล้ว
-            }
+            if (!loadedTabs[type]) { await loadShopData(type); loadedTabs[type] = true; }
         }
-
-        // ฟังก์ชันสำหรับดึงข้อมูลร้านค้าจาก Server
         async function loadShopData(type) {
             const statusMessage = document.getElementById('status-message');
             const listDiv = document.getElementById(type);
-            
             statusMessage.style.display = 'block';
             statusMessage.innerText = 'กำลังโหลดข้อมูล...';
-            listDiv.innerHTML = ''; // เคลียร์ข้อมูลเก่าก่อน
-
+            listDiv.innerHTML = '';
             try {
-                // 3. Fetch ข้อมูลจาก Server ของเรา
                 const response = await fetch(`/get-saved-shops?userId=${liffProfile.userId}&type=${type}`);
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to fetch shops');
-                }
-
+                if (!response.ok) { throw new Error(data.error || 'Failed to fetch shops'); }
                 const shops = data.shops;
-
                 if (shops.length === 0) {
                     listDiv.innerHTML = `<p style="text-align: center; color: #888;">คุณยังไม่มีร้านค้าในหมวดนี้</p>`;
                 } else {
                     shops.forEach(shopData => {
                         const card = document.createElement('div');
                         card.className = 'shop-card';
-                        card.innerHTML = `
-                            <img src="${shopData.imageUrl}" alt="${shopData.name}">
-                            <div class="shop-card-body">
-                                <div class="shop-info">
-                                    <h3>${shopData.name}</h3>
-                                    <p>${shopData.address || 'ไม่ระบุที่อยู่'}</p>
-                                </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopData.id}" target="_blank" class="map-button">ดูแผนที่</a>
-                            </div>
-                        `;
+                        card.innerHTML = `<img src="${shopData.imageUrl}" alt="${shopData.name}"><div class="shop-card-body"><div class="shop-info"><h3>${shopData.name}</h3><p>${shopData.address || 'ไม่ระบุที่อยู่'}</p></div><a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopData.id}" target="_blank" class="map-button">ดูแผนที่</a></div>`;
                         listDiv.appendChild(card);
                     });
                 }
                 statusMessage.style.display = 'none';
-
             } catch (error) {
                 console.error(`Error loading ${type} list:`, error);
                 listDiv.innerHTML = `<p style="text-align: center; color: red;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
                 statusMessage.style.display = 'none';
             }
         }
-        
-        // เริ่มทำงาน
         main();
     </script>
 </body>
