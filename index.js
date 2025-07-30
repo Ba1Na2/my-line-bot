@@ -120,116 +120,101 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     }
 }
 
-function createShopCarousel(places, apiKey, hasNextPage) {
-    const theme = {
-        primary: '#0D6EFD',
-        secondary: '#6C757D',
-        background: '#F8F9FA',
-        surface: '#FFFFFF',
-        textPrimary: '#212529',
-        textSecondary: '#6C757D',
-        accent: '#FFC107',
-        favorite: '#E83E8C'
-    };
-
-    if (!places || places.length === 0) {
-        return { type: 'text', text: 'ขออภัย ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
+const bubbles = places.map(place => {
+    if (!place || !place.place_id) {
+        return null;
     }
 
-    const bubbles = places.map(place => {
-        if (!place || !place.place_id) return null;
-
-        const placeId = place.place_id;
-        const name = place.name;
-        const address = place.vicinity || 'ไม่ระบุที่อยู่';
-        const ratingText = place.rating ? `${place.rating.toFixed(1)}` : 'N/A';
-        
-        let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
-        if (place.photos && place.photos.length > 0) {
-            imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${apiKey}`;
-        }
-        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
-
-        return {
-            type: 'bubble',
-            backgroundColor: theme.surface,
-            body: {
-                type: 'box', layout: 'vertical', spacing: 'md', paddingAll: '20px',
-                contents: [
-                    { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true, color: theme.textPrimary },
-                    { type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
-                        contents: [
-                            { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'sm' },
-                            { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
-                        ]
-                    },
-                    { type: 'text', text: address, wrap: true, size: 'sm', color: theme.textSecondary, margin: 'lg' }
-                ]
-            },
-            footer: {
-                type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '20px',
-                contents: [
-                    // --- VVVVVV จุดที่แก้ไข: ลบ 'color' ออกไป VVVVVV ---
-                    {
-                        type: 'button',
-                        style: 'primary', // style primary จะกำหนดสีให้เอง
-                        // color: theme.primary, // <--- ลบบรรทัดนี้ออก
-                        height: 'sm',
-                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl }
-                    },
-                    // --- ^^^^^^ จบจุดที่แก้ไข ^^^^^^ ---
-                    {
-                        type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
-                        contents: [
-                            {
-                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: '#f0f0f0', cornerRadius: 'md',
-                                paddingAll: 'md', justifyContent: 'center',
-                                action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` },
-                                contents: [{ type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
-                            },
-                             {
-                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: '#f0f0f0', cornerRadius: 'md',
-                                paddingAll: 'md', justifyContent: 'center',
-                                action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` },
-                                contents: [{ type: 'text', text: 'ดูภายหลัง', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
-                            }
-                        ]
-                    }
-                ]
-            }
-        };
-    }).filter(bubble => bubble !== null);
-
-    if (bubbles.length === 0) {
-        return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
-    }
-
-    if (hasNextPage) {
-        const loadMoreBubble = {
-            type: 'bubble',
-            body: {
-                layout: 'vertical', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                paddingAll: 'xl',
-                backgroundColor: '#e9f2ff',
-                action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
-                contents: [ 
-                    { 
-                        type: 'text', 
-                        text: 'แสดงเพิ่มเติม', 
-                        color: theme.primary,
-                        weight: 'bold' 
-                    } 
-                ]
-            }
-        };
-        bubbles.push(loadMoreBubble);
-    }
+    const placeId = place.place_id;
+    const name = place.name;
+    const address = place.vicinity || 'ไม่ระบุที่อยู่';
+    const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
+    let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
     
-    return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
+    if (place.photos && place.photos.length > 0) {
+        const photoReference = place.photos[0].photo_reference;
+        imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
+    }
+    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
+
+    return {
+        type: 'bubble',
+        hero: { type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover' },
+        body: {
+            type: 'box', layout: 'vertical',
+            contents: [
+                { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true },
+                { type: 'box', layout: 'baseline', margin: 'md', contents: [{ type: 'text', text: rating, size: 'sm', color: '#999999', flex: 0 }] },
+                { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
+            ]
+        },
+        // --- VVVVVV START: ส่วน Footer ที่ปรับปรุงสี VVVVVV ---
+        footer: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'md',
+            contents: [
+                // <<< ปุ่ม "ดูบนแผนที่" แบบมีสี >>>
+                {
+                    type: 'box',
+                    layout: 'horizontal',
+                    backgroundColor: '#dfeeffff', // สีน้ำเงิน
+                    cornerRadius: 'md',
+                    paddingAll: 'md',
+                    justifyContent: 'center',
+                    action: {
+                        type: 'uri',
+                        label: 'ดูบนแผนที่',
+                        uri: gmapsUrl
+                    },
+                    contents: [
+                        { type: 'text', text: 'ดูบนแผนที่', color: '#FFFFFF', weight: 'bold', size: 'sm' }
+                    ]
+                },
+                { type: 'box', layout: 'horizontal', spacing: 'sm',
+                    contents: [
+                        // <<< ปุ่ม "ร้านโปรด" >>>
+                        { 
+                            type: 'box', layout: 'horizontal', cornerRadius: 'md', 
+                            backgroundColor: '#ff9fb5ff', // สีชมพูอ่อน
+                            paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
+                            action: { type: 'postback', label: 'add_favorite', data: `action=add_favorite&shop_id=${placeId}` },
+                            contents: [ { type: 'text', text: '💓', color: '#C71585', weight: 'bold', size: 'sm', align: 'center' } ]
+                        },
+                        // <<< ปุ่ม "ดูภายหลัง" >>>
+                        { 
+                            type: 'box', layout: 'horizontal', cornerRadius: 'md', 
+                            backgroundColor: '#ffd1f8ff', // สีเทาอ่อน
+                            paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
+                            action: { type: 'postback', label: 'add_watch_later', data: `action=add_watch_later&shop_id=${placeId}` },
+                            contents: [ { type: 'text', text: 'ดูภายหลัง', color: '#333333', weight: 'bold', size: 'sm', align: 'center' } ]
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+}).filter(bubble => bubble !== null);
+
+if (bubbles.length === 0) {
+    return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
 }
 
+ if (hasNextPage) {
+    // <<< ปุ่ม "แสดงเพิ่มเติม" แบบมีสี >>>
+    const loadMoreBubble = {
+        type: 'bubble',
+        body: { 
+            type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', paddingAll: 'xl',
+            backgroundColor: '#ffffffff', 
+            action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
+            contents: [ { type: 'text', text: 'แสดงเพิ่มเติม', color: '#575757ff', weight: 'bold' } ]
+        }
+    };
+    bubbles.push(loadMoreBubble);
+}
+
+return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 
 async function callGemini(prompt) {
     try {
