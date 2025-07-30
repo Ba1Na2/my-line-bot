@@ -40,181 +40,122 @@ const app = express();
 app.use(express.static('public'));
 
 
-
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
-    "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
-    "สีลม": {"lat": 13.729908, "lng": 100.535898},
-    "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
-    "คลองเตย": {"lat": 13.723912, "lng": 100.556276},
-    "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587},
-    "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081},
-    "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919},
-    "พระราม 9": {"lat": 13.758031, "lng": 100.565439},
-    "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106},
-    "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633},
-    "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784},
-    "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647},
-    "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899},
-    "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144},
-    "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278},
-    "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481},
-    "บางซื่อ": {"lat": 13.803362, "lng": 100.535032},
-    "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, 
-    "บางโพ": {"lat": 13.811808, "lng": 100.521833},
-    "บางอ้อ": {"lat": 13.805565, "lng": 100.512686},
-    "บางพลัด": {"lat": 13.790588, "lng": 100.506541},
-    "สิรินธร": {"lat": 13.782017, "lng": 100.493922},
-    "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390},
-    "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085},
-    "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033},
-    "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724},
-    "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, 
-    "บางไผ่": {"lat": 13.734685, "lng": 100.468841},
-    "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, 
-    "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747},
-    "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440},
-    "บางแค": {"lat": 13.715367, "lng": 100.418041},
-    "หลักสอง": {"lat": 13.710784, "lng": 100.406103},
-    "วัดมังกร": {"lat": 13.743734, "lng": 100.509747},
-    "สามยอด": {"lat": 13.747199, "lng": 100.503276},
-    "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
-    "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
-    };
+    "สามย่าน": {"lat": 13.732952, "lng": 100.529431}, "สีลม": {"lat": 13.729908, "lng": 100.535898}, "ลุมพินี": {"lat": 13.729172, "lng": 100.546305}, "คลองเตย": {"lat": 13.723912, "lng": 100.556276}, "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587}, "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081}, "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919}, "พระราม 9": {"lat": 13.758031, "lng": 100.565439}, "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106}, "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633}, "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784}, "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647}, "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899}, "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144}, "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278}, "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481}, "บางซื่อ": {"lat": 13.803362, "lng": 100.535032}, "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, "บางโพ": {"lat": 13.811808, "lng": 100.521833}, "บางอ้อ": {"lat": 13.805565, "lng": 100.512686}, "บางพลัด": {"lat": 13.790588, "lng": 100.506541}, "สิรินธร": {"lat": 13.782017, "lng": 100.493922}, "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390}, "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085}, "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033}, "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724}, "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, "บางไผ่": {"lat": 13.734685, "lng": 100.468841}, "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747}, "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440}, "บางแค": {"lat": 13.715367, "lng": 100.418041}, "หลักสอง": {"lat": 13.710784, "lng": 100.406103}, "วัดมังกร": {"lat": 13.743734, "lng": 100.509747}, "สามยอด": {"lat": 13.747199, "lng": 100.503276}, "สนามไชย": {"lat": 13.743384, "lng": 100.495048}, "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
+};
 
 async function detectIntent(userId, text) {
-    const sessionId = uuidv4();
-    const sessionPath = sessionClient.projectAgentSessionPath(DIALOGFLOW_PROJECT_ID, sessionId);
-    const request = {
-        session: sessionPath,
-        queryInput: { text: { text: text, languageCode: 'th-TH' } },
-    };
-    try {
-        console.log(`Sending to Dialogflow: "${text}"`);
-        const responses = await sessionClient.detectIntent(request);
-        return responses[0].queryResult;
-    } catch (error) {
-        console.error('ERROR DETECTING INTENT:', error);
-        return null;
-    }
+    // ... (เหมือนเดิม) ...
 }
 
 async function searchGooglePlaces(apiKey, keyword, lat, lng) {
-    console.log(`Searching Google (TextSearch) for: ${keyword}`);
-    try {
-        const response = await googleMapsClient.textSearch({
-            params: {
-                query: keyword,
-                location: { lat, lng },
-                radius: 1500,
-                language: 'th',
-                key: apiKey,
-            },
-            timeout: 5000,
-        });
-        console.log('Successfully got response from Google API.');
-        return response.data.results || [];
-    } catch (e) {
-        console.error("Google Maps API (TextSearch) Error:", e.response ? e.response.data : e.message);
-        return [];
-    }
+    // ... (เหมือนเดิม) ...
 }
 
-const bubbles = places.map(place => {
-    if (!place || !place.place_id) {
-        return null;
+// --- VVVVVV START: โค้ดทั้งหมดถูกนำกลับเข้ามาในฟังก์ชันนี้ VVVVVV ---
+function createShopCarousel(places, apiKey, hasNextPage) {
+    const theme = {
+        primary: '#0D6EFD',
+        surface: '#FFFFFF',
+        textPrimary: '#212529',
+        textSecondary: '#6C757D',
+    };
+
+    if (!places || places.length === 0) {
+        return { type: 'text', text: 'ขออภัย ไม่พบร้านค้าที่ตรงกับเงื่อนไขของคุณในขณะนี้' };
     }
 
-    const placeId = place.place_id;
-    const name = place.name;
-    const address = place.vicinity || 'ไม่ระบุที่อยู่';
-    const rating = place.rating ? `⭐ ${place.rating.toFixed(1)}` : 'ไม่มีคะแนน';
-    let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
-    
-    if (place.photos && place.photos.length > 0) {
-        const photoReference = place.photos[0].photo_reference;
-        imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
-    }
-    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
+    const bubbles = places.map(place => {
+        if (!place || !place.place_id) return null;
 
-    return {
-        type: 'bubble',
-        hero: { type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover' },
-        body: {
-            type: 'box', layout: 'vertical',
-            contents: [
-                { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true },
-                { type: 'box', layout: 'baseline', margin: 'md', contents: [{ type: 'text', text: rating, size: 'sm', color: '#999999', flex: 0 }] },
-                { type: 'text', text: address, wrap: true, size: 'sm', color: '#666666', margin: 'md' }
-            ]
-        },
-        // --- VVVVVV START: ส่วน Footer ที่ปรับปรุงสี VVVVVV ---
-        footer: {
-            type: 'box',
-            layout: 'vertical',
-            spacing: 'md',
-            contents: [
-                // <<< ปุ่ม "ดูบนแผนที่" แบบมีสี >>>
-                {
-                    type: 'box',
-                    layout: 'horizontal',
-                    backgroundColor: '#dfeeffff', // สีน้ำเงิน
-                    cornerRadius: 'md',
-                    paddingAll: 'md',
-                    justifyContent: 'center',
-                    action: {
-                        type: 'uri',
-                        label: 'ดูบนแผนที่',
-                        uri: gmapsUrl
+        const placeId = place.place_id;
+        const name = place.name;
+        const address = place.vicinity || 'ไม่ระบุที่อยู่';
+        const ratingText = place.rating ? `${place.rating.toFixed(1)}` : 'N/A';
+        
+        let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
+        if (place.photos && place.photos.length > 0) {
+            imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${apiKey}`;
+        }
+        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${placeId}`;
+
+        return {
+            type: 'bubble',
+            hero: { type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover', backgroundColor: '#eeeeee' },
+            body: {
+                type: 'box',
+                layout: 'vertical',
+                paddingAll: '20px',
+                spacing: 'md',
+                contents: [
+                    { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true, color: theme.textPrimary },
+                    {
+                        type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
+                        contents: [
+                            { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'sm' },
+                            { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
+                        ]
                     },
-                    contents: [
-                        { type: 'text', text: 'ดูบนแผนที่', color: '#FFFFFF', weight: 'bold', size: 'sm' }
-                    ]
-                },
-                { type: 'box', layout: 'horizontal', spacing: 'sm',
-                    contents: [
-                        // <<< ปุ่ม "ร้านโปรด" >>>
-                        { 
-                            type: 'box', layout: 'horizontal', cornerRadius: 'md', 
-                            backgroundColor: '#ff9fb5ff', // สีชมพูอ่อน
-                            paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
-                            action: { type: 'postback', label: 'add_favorite', data: `action=add_favorite&shop_id=${placeId}` },
-                            contents: [ { type: 'text', text: '💓', color: '#C71585', weight: 'bold', size: 'sm', align: 'center' } ]
-                        },
-                        // <<< ปุ่ม "ดูภายหลัง" >>>
-                        { 
-                            type: 'box', layout: 'horizontal', cornerRadius: 'md', 
-                            backgroundColor: '#ffd1f8ff', // สีเทาอ่อน
-                            paddingAll: 'md', justifyContent: 'center', alignItems: 'center', flex: 1,
-                            action: { type: 'postback', label: 'add_watch_later', data: `action=add_watch_later&shop_id=${placeId}` },
-                            contents: [ { type: 'text', text: 'ดูภายหลัง', color: '#333333', weight: 'bold', size: 'sm', align: 'center' } ]
-                        }
-                    ]
-                }
-            ]
-        }
-    };
-}).filter(bubble => bubble !== null);
+                    { type: 'text', text: address, wrap: true, size: 'sm', color: theme.textSecondary, margin: 'lg' }
+                ]
+            },
+            footer: {
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'sm',
+                paddingAll: '20px',
+                contents: [
+                    {
+                        type: 'button',
+                        style: 'primary',
+                        height: 'sm',
+                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl }
+                    },
+                    {
+                        type: 'button',
+                        style: 'secondary',
+                        height: 'sm',
+                        action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` }
+                    },
+                    {
+                        type: 'button',
+                        style: 'secondary',
+                        height: 'sm',
+                        action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` }
+                    }
+                ]
+            }
+        };
+    }).filter(bubble => bubble !== null);
 
-if (bubbles.length === 0) {
-    return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
+    if (bubbles.length === 0) {
+        return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
+    }
+
+    if (hasNextPage) {
+        const loadMoreBubble = {
+            type: 'bubble',
+            body: {
+                type: 'box',
+                layout: 'vertical',
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingAll: '20px',
+                contents: [{
+                    type: 'button',
+                    style: 'link',
+                    height: 'sm',
+                    color: theme.primary,
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' }
+                }]
+            }
+        };
+        bubbles.push(loadMoreBubble);
+    }
+    
+    return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 }
-
- if (hasNextPage) {
-    // <<< ปุ่ม "แสดงเพิ่มเติม" แบบมีสี >>>
-    const loadMoreBubble = {
-        type: 'bubble',
-        body: { 
-            type: 'box', layout: 'vertical', justifyContent: 'center', alignItems: 'center', paddingAll: 'xl',
-            backgroundColor: '#ffffffff', 
-            action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
-            contents: [ { type: 'text', text: 'แสดงเพิ่มเติม', color: '#575757ff', weight: 'bold' } ]
-        }
-    };
-    bubbles.push(loadMoreBubble);
-}
-
-return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 
 async function callGemini(prompt) {
     try {
