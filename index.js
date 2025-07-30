@@ -121,7 +121,6 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
 }
 
 function createShopCarousel(places, apiKey, hasNextPage) {
-    // Theme Colors
     const theme = {
         primary: '#0D6EFD',
         secondary: '#6C757D',
@@ -138,7 +137,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
     }
 
 
-    const bubbles = places.map(place => {
+ const bubbles = places.map(place => {
         if (!place || !place.place_id) return null;
 
         const placeId = place.place_id;
@@ -158,32 +157,20 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             body: {
                 type: 'box', layout: 'vertical', spacing: 'md', paddingAll: '20px',
                 contents: [
-                    {
-                        type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true,
-                        color: theme.textPrimary
-                    },
-                    {
-                        type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
+                    { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true, color: theme.textPrimary },
+                    { type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
                         contents: [
                             { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'sm' },
-                            // --- VVVVVV จุดที่แก้ไข: ลบ flex: 0 ออกไป VVVVVV ---
                             { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
-                            // --- ^^^^^^ จบจุดที่แก้ไข ^^^^^^ ---
                         ]
                     },
-                    {
-                        type: 'text', text: address, wrap: true, size: 'sm',
-                        color: theme.textSecondary, margin: 'lg'
-                    }
+                    { type: 'text', text: address, wrap: true, size: 'sm', color: theme.textSecondary, margin: 'lg' }
                 ]
             },
             footer: {
                 type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '20px',
                 contents: [
-                    {
-                        type: 'button', style: 'primary', color: theme.primary, height: 'sm',
-                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl }
-                    },
+                    { type: 'button', style: 'primary', color: theme.primary, height: 'sm', action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl } },
                     {
                         type: 'box', layout: 'horizontal', spacing: 'sm', margin: 'md',
                         contents: [
@@ -193,7 +180,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                                 flex: 1,
                                 backgroundColor: '#f0f0f0',
                                 cornerRadius: 'md',
-                                height: 'sm',
+                                paddingAll: 'md', 
                                 justifyContent: 'center',
                                 action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` },
                                 contents: [
@@ -206,7 +193,7 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                                 flex: 1,
                                 backgroundColor: '#f0f0f0',
                                 cornerRadius: 'md',
-                                height: 'sm',
+                                paddingAll: 'md', 
                                 justifyContent: 'center',
                                 action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` },
                                 contents: [
@@ -219,7 +206,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             }
         };
     }).filter(bubble => bubble !== null);
-
     if (bubbles.length === 0) {
         return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
     }
@@ -234,7 +220,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                 alignItems: 'center', 
                 paddingAll: 'xl',
                 backgroundColor: '#e9f2ff', // ใช้สีฟ้าอ่อนจากธีม
-                // เปลี่ยนจาก button เป็น action ของ box แทน
                 action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' },
                 contents: [ 
                     { 
