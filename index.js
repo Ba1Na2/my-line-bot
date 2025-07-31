@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const express = require('express');
 const line = require('@line/bot-sdk');
 const firebase = require('firebase-admin');
@@ -16,6 +17,14 @@ const config = {
     channelSecret: process.env.CHANNEL_SECRET,
 };
 const client = new line.Client(config);
+
+console.log("--- Checking for key files ---");
+const serviceAccountPath = './serviceAccountKey.json';
+const dialogflowKeyPath = './dialogflow-key.json';
+
+console.log(`Does ${serviceAccountPath} exist? :`, fs.existsSync(serviceAccountPath));
+console.log(`Does ${dialogflowKeyPath} exist? :`, fs.existsSync(dialogflowKeyPath));
+console.log("------------------------------");
 
 const serviceAccount = require('./serviceAccountKey.json');
 if (firebase.apps.length === 0) {
