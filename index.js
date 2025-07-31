@@ -50,6 +50,7 @@ const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" 
 
 const app = express();
 app.use(express.static('public'));
+app.use(express.json()); 
 
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
@@ -323,6 +324,35 @@ app.get('/get-saved-shops', async (req, res) => {
     } catch (error) {
         console.error('Error fetching saved shops:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/delete-saved-shop', async (req, res) => {
+    try {
+        // รับข้อมูลที่จำเป็นจากหน้าเว็บ
+        const { userId, shopId, type } = req.body;
+
+        if (!userId || !shopId || !type) {
+            return res.status(400).json({ success: false, error: 'Missing required data' });
+        }
+        
+        // กำหนด collection ที่จะลบ (favorites หรือ watch_later)
+        const collectionName = type;
+        
+        // สร้าง reference ไปยัง document ที่ต้องการลบ
+        const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
+
+        // สั่งลบ!
+        await docRef.delete();
+
+        console.log(`Deleted shop ${shopId} from ${type} for user ${userId}`);
+        
+        // ส่งข้อความยืนยันกลับไปว่าลบสำเร็จแล้ว
+        res.status(200).json({ success: true, message: 'Shop deleted successfully' });
+
+    } catch (error) {
+        console.error('Error deleting shop:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
 });
 

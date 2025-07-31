@@ -134,6 +134,26 @@
             color: var(--color-text-secondary);
             font-size: 1.1em;
         }
+        .actions-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1.2em;
+            color: var(--color-text-secondary);
+            transition: color 0.2s;
+        }
+
+        .delete-button:hover {
+            color: #DC3545; /* สีแดงเมื่อเอาเมาส์ไปชี้ */
+        }
+
     </style>
 </head>
 <body>
@@ -153,52 +173,155 @@
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
-        // ... (ส่วน JavaScript เหมือนเดิมทุกประการ ไม่ต้องแก้ไข) ...
-        let liffProfile = null; let loadedTabs = {};
-        async function main() {
-            try {
-                await liff.init({ liffId: "2007704697-mv4GBn6P" });
-                if (!liff.isLoggedIn()) { document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อดูข้อมูล"; return; }
-                liffProfile = await liff.getProfile();
-                await showList('watch_later');
-            } catch (error) { console.error('An error occurred during initialization:', error); document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการเริ่มต้นแอป'; }
-        }
-        window.showList = async function(type) {
-            document.querySelectorAll('.shop-list').forEach(list => list.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(type).classList.add('active');
-            document.getElementById(`tab-${type}`).classList.add('active');
-            if (!loadedTabs[type]) { await loadShopData(type); loadedTabs[type] = true; }
-        }
-        async function loadShopData(type) {
-            const statusMessage = document.getElementById('status-message');
-            const listDiv = document.getElementById(type);
-            statusMessage.style.display = 'block';
-            statusMessage.innerText = 'กำลังโหลดข้อมูล...';
-            listDiv.innerHTML = '';
-            try {
-                const response = await fetch(`/get-saved-shops?userId=${liffProfile.userId}&type=${type}`);
-                const data = await response.json();
-                if (!response.ok) { throw new Error(data.error || 'Failed to fetch shops'); }
-                const shops = data.shops;
-                if (shops.length === 0) {
-                    listDiv.innerHTML = `<p style="text-align: center; color: #888;">คุณยังไม่มีร้านค้าในหมวดนี้</p>`;
-                } else {
-                    shops.forEach(shopData => {
-                        const card = document.createElement('div');
-                        card.className = 'shop-card';
-                        card.innerHTML = `<img src="${shopData.imageUrl}" alt="${shopData.name}"><div class="shop-card-body"><div class="shop-info"><h3>${shopData.name}</h3><p>${shopData.address || 'ไม่ระบุที่อยู่'}</p></div><a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopData.id}" target="_blank" class="map-button">ดูแผนที่</a></div>`;
-                        listDiv.appendChild(card);
-                    });
-                }
-                statusMessage.style.display = 'none';
-            } catch (error) {
-                console.error(`Error loading ${type} list:`, error);
-                listDiv.innerHTML = `<p style="text-align: center; color: red;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
-                statusMessage.style.display = 'none';
+    let liffProfile = null; // เก็บ profile ไว้ใช้ซ้ำ
+    let loadedTabs = {};   // เก็บสถานะว่า Tab ไหนโหลดแล้ว
+
+    // ฟังก์ชันหลักที่เริ่มทำงานเมื่อเปิดหน้าเว็บ
+    async function main() {
+        try {
+            // 1. Initialize LIFF
+            await liff.init({ liffId: "2007704697-mv4GBn6P" });
+
+            if (!liff.isLoggedIn()) {
+                document.getElementById('status-message').innerText = "กรุณาล็อกอินเพื่อดูข้อมูล";
+                return;
             }
+
+            liffProfile = await liff.getProfile();
+
+            // 2. แสดง Tab เริ่มต้น (ดูภายหลัง)
+            await showList('watch_later');
+            
+            // 3. เพิ่ม Event Listener เพื่อดักจับการกดปุ่มลบ
+            document.querySelector('.content-area').addEventListener('click', handleDeleteClick);
+
+        } catch (error) {
+            console.error('An error occurred during initialization:', error);
+            document.getElementById('status-message').innerText = 'เกิดข้อผิดพลาดในการเริ่มต้นแอป';
         }
-        main();
-    </script>
+    }
+
+    // ฟังก์ชันสำหรับสลับ Tab
+    window.showList = async function(type) {
+        document.querySelectorAll('.shop-list').forEach(list => list.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(type).classList.add('active');
+        document.getElementById(`tab-${type}`).classList.add('active');
+        
+        if (!loadedTabs[type]) {
+            await loadShopData(type);
+            loadedTabs[type] = true;
+        }
+    }
+
+    // ฟังก์ชันสำหรับดึงข้อมูลร้านค้าและสร้าง Card
+    async function loadShopData(type) {
+        const statusMessage = document.getElementById('status-message');
+        const listDiv = document.getElementById(type);
+        
+        statusMessage.style.display = 'block';
+        statusMessage.innerText = 'กำลังโหลดข้อมูล...';
+        listDiv.innerHTML = '';
+
+        try {
+            const response = await fetch(`/get-saved-shops?userId=${liffProfile.userId}&type=${type}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch shops');
+            }
+
+            const shops = data.shops;
+
+            if (shops.length === 0) {
+                listDiv.innerHTML = `<p style="text-align: center; color: #888;">คุณยังไม่มีร้านค้าในหมวดนี้</p>`;
+            } else {
+                shops.forEach(shopData => {
+                    const card = document.createElement('div');
+                    card.className = 'shop-card';
+                    // --- VVVVVV แก้ไข HTML ของ Card เพื่อเพิ่มปุ่มลบ VVVVVV ---
+                    card.innerHTML = `
+                        <img src="${shopData.imageUrl}" alt="${shopData.name}">
+                        <div class="shop-card-body">
+                            <div class="shop-info">
+                                <h3>${shopData.name}</h3>
+                                <p>${shopData.address || 'ไม่ระบุที่อยู่'}</p>
+                            </div>
+                            <div class="actions-container">
+                                <a href="https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${shopData.id}" target="_blank" class="map-button">ดูแผนที่</a>
+                                <button class="delete-button" data-shop-id="${shopData.id}" data-type="${type}">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                    // --- ^^^^^^ จบส่วนที่แก้ไข ^^^^^^ ---
+                    listDiv.appendChild(card);
+                });
+            }
+            statusMessage.style.display = 'none';
+
+        } catch (error) {
+            console.error(`Error loading ${type} list:`, error);
+            listDiv.innerHTML = `<p style="text-align: center; color: red;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>`;
+            statusMessage.style.display = 'none';
+        }
+    }
+    
+    // --- VVVVVV เพิ่มฟังก์ชันใหม่สำหรับจัดการการลบ VVVVVV ---
+    async function handleDeleteClick(event) {
+        const deleteButton = event.target.closest('.delete-button');
+
+        if (!deleteButton) {
+            return; // ถ้าไม่ได้คลิกที่ปุ่มลบ ก็ไม่ต้องทำอะไร
+        }
+
+        const shopId = deleteButton.dataset.shopId;
+        const type = deleteButton.dataset.type;
+
+        // ถามยืนยันก่อนลบ
+        if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบร้านนี้ออกจากรายการ?')) {
+            return;
+        }
+        
+        try {
+            // ส่งคำสั่งลบไปที่ Server
+            const response = await fetch('/delete-saved-shop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: liffProfile.userId,
+                    shopId: shopId,
+                    type: type
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // ถ้าลบสำเร็จ ให้ลบ card ออกจากหน้าจอ
+                const cardToRemove = deleteButton.closest('.shop-card');
+                cardToRemove.style.transition = 'opacity 0.3s ease';
+                cardToRemove.style.opacity = '0';
+                setTimeout(() => {
+                    cardToRemove.remove();
+                    // ตรวจสอบว่า list ว่างเปล่าหรือยัง
+                    const listDiv = document.getElementById(type);
+                    if (listDiv.children.length === 0) {
+                         listDiv.innerHTML = `<p style="text-align: center; color: #888;">คุณยังไม่มีร้านค้าในหมวดนี้</p>`;
+                    }
+                }, 300);
+            } else {
+                alert('เกิดข้อผิดพลาด: ไม่สามารถลบร้านค้าได้');
+            }
+        } catch (error) {
+            console.error('Error deleting shop:', error);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อลบร้านค้า');
+        }
+    }
+    // --- ^^^^^^ จบฟังก์ชันใหม่ ^^^^^^ ---
+
+    // เริ่มทำงาน
+    main();
+</script>
 </body>
 </html>
