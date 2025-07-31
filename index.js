@@ -54,18 +54,86 @@ app.use(express.static('public'));
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
-    "สามย่าน": {"lat": 13.732952, "lng": 100.529431}, "สีลม": {"lat": 13.729908, "lng": 100.535898}, "ลุมพินี": {"lat": 13.729172, "lng": 100.546305}, "คลองเตย": {"lat": 13.723912, "lng": 100.556276}, "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587}, "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081}, "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919}, "พระราม 9": {"lat": 13.758031, "lng": 100.565439}, "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106}, "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633}, "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784}, "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647}, "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899}, "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144}, "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278}, "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481}, "บางซื่อ": {"lat": 13.803362, "lng": 100.535032}, "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, "บางโพ": {"lat": 13.811808, "lng": 100.521833}, "บางอ้อ": {"lat": 13.805565, "lng": 100.512686}, "บางพลัด": {"lat": 13.790588, "lng": 100.506541}, "สิรินธร": {"lat": 13.782017, "lng": 100.493922}, "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390}, "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085}, "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033}, "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724}, "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, "บางไผ่": {"lat": 13.734685, "lng": 100.468841}, "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747}, "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440}, "บางแค": {"lat": 13.715367, "lng": 100.418041}, "หลักสอง": {"lat": 13.710784, "lng": 100.406103}, "วัดมังกร": {"lat": 13.743734, "lng": 100.509747}, "สามยอด": {"lat": 13.747199, "lng": 100.503276}, "สนามไชย": {"lat": 13.743384, "lng": 100.495048}, "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
-};
+
+    "หัวลำโพง": {"lat": 13.739186, "lng": 100.516893},
+    "สามย่าน": {"lat": 13.732952, "lng": 100.529431},
+    "สีลม": {"lat": 13.729908, "lng": 100.535898},
+    "ลุมพินี": {"lat": 13.729172, "lng": 100.546305},
+    "คลองเตย": {"lat": 13.723912, "lng": 100.556276},
+    "ศูนย์การประชุมแห่งชาติสิริกิติ์": {"lat": 13.722881, "lng": 100.561587},
+    "สุขุมวิท": {"lat": 13.738012, "lng": 100.561081},
+    "เพชรบุรี": {"lat": 13.750873, "lng": 100.561919},
+    "พระราม 9": {"lat": 13.758031, "lng": 100.565439},
+    "ศูนย์วัฒนธรรมแห่งประเทศไทย": {"lat": 13.765664, "lng": 100.569106},
+    "ห้วยขวาง": {"lat": 13.778844, "lng": 100.574633},
+    "สุทธิสาร": {"lat": 13.789233, "lng": 100.574784},
+    "รัชดาภิเษก": {"lat": 13.797274, "lng": 100.575647},
+    "ลาดพร้าว": {"lat": 13.806659, "lng": 100.576899},
+    "พหลโยธิน": {"lat": 13.815779, "lng": 100.562144},
+    "สวนจตุจักร": {"lat": 13.822295, "lng": 100.552278},
+    "กำแพงเพชร": {"lat": 13.824706, "lng": 100.548481},
+    "บางซื่อ": {"lat": 13.803362, "lng": 100.535032},
+    "เตาปูน": {"lat": 13.806306, "lng": 100.529450}, 
+    "บางโพ": {"lat": 13.811808, "lng": 100.521833},
+    "บางอ้อ": {"lat": 13.805565, "lng": 100.512686},
+    "บางพลัด": {"lat": 13.790588, "lng": 100.506541},
+    "สิรินธร": {"lat": 13.782017, "lng": 100.493922},
+    "บางยี่ขัน": {"lat": 13.771146, "lng": 100.488390},
+    "บางขุนนนท์": {"lat": 13.764491, "lng": 100.477085},
+    "ไฟฉาย": {"lat": 13.757352, "lng": 100.469033},
+    "จรัญฯ 13": {"lat": 13.751325, "lng": 100.470724},
+    "ท่าพระ": {"lat": 13.743015, "lng": 100.472280}, 
+    "บางไผ่": {"lat": 13.734685, "lng": 100.468841},
+    "บางหว้า": {"lat": 13.723824, "lng": 100.460144}, 
+    "เพชรเกษม 48": {"lat": 13.722686, "lng": 100.444747},
+    "ภาษีเจริญ": {"lat": 13.719601, "lng": 100.434440},
+    "บางแค": {"lat": 13.715367, "lng": 100.418041},
+    "หลักสอง": {"lat": 13.710784, "lng": 100.406103},
+    "วัดมังกร": {"lat": 13.743734, "lng": 100.509747},
+    "สามยอด": {"lat": 13.747199, "lng": 100.503276},
+    "สนามไชย": {"lat": 13.743384, "lng": 100.495048},
+    "อิสรภาพ": {"lat": 13.747444, "lng": 100.485233},
+
+    };
 
 async function detectIntent(userId, text) {
-    // ... (เหมือนเดิม) ...
+  const sessionId = uuidv4();
+    const sessionPath = sessionClient.projectAgentSessionPath(DIALOGFLOW_PROJECT_ID, sessionId);
+    const request = {
+        session: sessionPath,
+        queryInput: { text: { text: text, languageCode: 'th-TH' } },
+    };
+    try {
+        console.log(`Sending to Dialogflow: "${text}"`);
+        const responses = await sessionClient.detectIntent(request);
+        return responses[0].queryResult;
+    } catch (error) {
+        console.error('ERROR DETECTING INTENT:', error);
+        return null;
+    }
 }
-
 async function searchGooglePlaces(apiKey, keyword, lat, lng) {
-    // ... (เหมือนเดิม) ...
+    console.log(`Searching Google (TextSearch) for: ${keyword}`);
+    try {
+        const response = await googleMapsClient.textSearch({
+            params: {
+                query: keyword,
+                location: { lat, lng },
+                radius: 1500,
+                language: 'th',
+                key: apiKey,
+            },
+            timeout: 5000,
+        });
+        console.log('Successfully got response from Google API.');
+        return response.data.results || [];
+    } catch (e) {
+        console.error("Google Maps API (TextSearch) Error:", e.response ? e.response.data : e.message);
+        return [];
+    }
 }
 
-// --- VVVVVV START: โค้ดทั้งหมดถูกนำกลับเข้ามาในฟังก์ชันนี้ VVVVVV ---
+
 function createShopCarousel(places, apiKey, hasNextPage) {
     const theme = {
         primary: '#0D6EFD',
@@ -180,7 +248,7 @@ async function callGemini(prompt) {
     } catch (error) {
         console.error('ERROR CALLING GEMINI API:', error);
 
-        // --- VVVVVV START: ส่วนที่เพิ่มเข้ามา VVVVVV ---
+        
         // ตรวจสอบว่าเป็น Error ประเภท "Service Unavailable" หรือไม่
         if (error.status === 503) {
             return "ตอนนี้มีผู้ใช้งานพร้อมกันจำนวนมาก ทำให้ฉันตอบกลับช้ากว่าปกติ กรุณาลองใหม่อีกครั้งในสักครู่นะ";
@@ -206,7 +274,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
         .catch((err) => { console.error(err); res.status(500).end(); });
 });
 
-// --- VVVVVV START: Endpoint สำหรับ LIFF App (ฉบับแก้ไข) VVVVVV ---
+
 app.get('/get-saved-shops', async (req, res) => {
     try {
         const { userId, type } = req.query; 
