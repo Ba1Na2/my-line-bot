@@ -12,6 +12,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
 // ----- 1. INITIALIZE SERVICES -----
+
 const config = {
     channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
     channelSecret: process.env.CHANNEL_SECRET,
@@ -32,6 +33,8 @@ if (firebase.apps.length === 0) {
         credential: firebase.credential.cert(serviceAccount)
     });
 }
+
+
 const db = firebase.firestore();
 
 const googleMapsClient = new Client({});
