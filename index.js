@@ -47,6 +47,9 @@ const app = express();
 
 // ----- 3. WEBHOOK ENDPOINT -----
 
+app.use(express.static('public'));
+
+app.use(express.json()); 
 
 app.post('/callback', line.middleware(config), (req, res) => {
     Promise
@@ -55,9 +58,6 @@ app.post('/callback', line.middleware(config), (req, res) => {
         .catch((err) => { console.error(err); res.status(500).end(); });
 });
 
-app.use(express.static('public'));
-
-app.use(express.json()); 
 
 app.get('/get-saved-shops', async (req, res) => {
     try {
