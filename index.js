@@ -418,7 +418,36 @@ async function deleteQueryBatch(db, query, resolve) {
 
 // ----- 4. EVENT HANDLER -----
 const handleEvent = async (event) => {
+
+     if (!event.source.userId) {
+        return Promise.resolve(null);
+    }
     const userId = event.source.userId;
+
+    // --- VVVVVV START: โค้ดส่วน "สร้างโปรไฟล์อัตโนมัติ" ที่เพิ่มเข้ามา VVVVVV ---
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    // ถ้าไม่เจอข้อมูลผู้ใช้ใน Firestore (อาจจะเพราะเป็นผู้ใช้ใหม่ หรือเพิ่งลบบัญชีไป)
+    if (!userDoc.exists) {
+        try {
+            console.log(`User document not found for ${userId}. Creating new profile...`);
+            const profile = await client.getProfile(userId);
+            await userRef.set({
+                line_userId: userId,
+                displayName: profile.displayName,
+                pictureUrl: profile.pictureUrl,
+                statusMessage: profile.statusMessage || null,
+                followedAt: new Date() // ใช้เวลาปัจจุบันเป็นการสร้างโปรไฟล์ใหม่
+            });
+            console.log(`Successfully created new profile for ${profile.displayName}.`);
+        } catch (error) {
+            console.error(`Failed to create profile for new user ${userId}:`, error);
+            // ถ้าดึงโปรไฟล์ไม่ได้จริงๆ ก็อาจจะต้องหยุดการทำงานไปก่อน
+            return Promise.resolve(null);
+
+        }
+    }
 
     if (event.type === 'follow') {
         try {
