@@ -138,6 +138,38 @@ app.post('/delete-saved-shop', async (req, res) => {
     }
 });
 
+app.post('/delete-user-account', async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'Missing userId' });
+        }
+
+        console.log(`[DELETION] Starting full data deletion for user: ${userId}`);
+
+        // 1. ลบ Subcollection 'favorites'
+        await deleteCollection(db, `users/${userId}/favorites`, 50);
+        console.log(`[DELETION] - Successfully deleted 'favorites' for user: ${userId}`);
+
+        // 2. ลบ Subcollection 'watch_later'
+        await deleteCollection(db, `users/${userId}/watch_later`, 50);
+        console.log(`[DELETION] - Successfully deleted 'watch_later' for user: ${userId}`);
+
+        // 3. ลบ Document หลักของผู้ใช้ (หลังจากลบ Subcollection หมดแล้ว)
+        const userRef = db.collection('users').doc(userId);
+        await userRef.delete();
+        console.log(`[DELETION] - Successfully deleted main user document for: ${userId}`);
+
+        // ส่งข้อความยืนยันกลับไปว่าลบสำเร็จ
+        res.status(200).json({ success: true, message: 'User account and all data deleted successfully' });
+
+    } catch (error) {
+        console.error('Error deleting user account:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
+
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
 
@@ -237,7 +269,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
 
         const placeId = place.place_id;
         const name = place.name;
-        const address = place.vicinity || 'ไม่ระบุที่อยู่';
         const ratingText = place.rating ? `${place.rating.toFixed(1)}` : 'N/A';
         
         let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
@@ -263,7 +294,6 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                             { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
                         ]
                     },
-                    { type: 'text', text: address, wrap: true, size: 'sm', color: theme.textSecondary, margin: 'lg' }
                 ]
             },
             footer: {
@@ -349,6 +379,39 @@ async function callGemini(prompt) {
         return "ขออภัย ตอนนี้ฉันอาจจะยังไม่ค่อยเข้าใจ ลองถามคำถามอื่นได้ไหมคะ";
     }
 }
+
+async function deleteCollection(db, collectionPath, batchSize) {
+    const collectionRef = db.collection(collectionPath);
+    const query = collectionRef.orderBy('__name__').limit(batchSize);
+
+    return new Promise((resolve, reject) => {
+        deleteQueryBatch(db, query, resolve).catch(reject);
+    });
+}
+
+async function deleteQueryBatch(db, query, resolve) {
+    const snapshot = await query.get();
+
+    const batchSize = snapshot.size;
+    if (batchSize === 0) {
+        // ไม่มีเอกสารเหลือแล้ว
+        resolve();
+        return;
+    }
+
+    // ลบเอกสารที่เจอ
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    // ทำซ้ำจนกว่าจะหมด
+    process.nextTick(() => {
+        deleteQueryBatch(db, query, resolve);
+    });
+}
+
 
 
 
