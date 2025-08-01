@@ -134,12 +134,10 @@ async function searchGooglePlaces(apiKey, keyword, lat, lng) {
     }
 }
 
+
 function createShopCarousel(places, apiKey, hasNextPage) {
     const theme = {
-        primary: '#0D6EFD', // สีน้ำเงินหลัก
-        primaryDark: '#00529B',
-        secondaryBg: '#F8F9FA', // สีพื้นหลังปุ่มรอง
-        secondaryBorder: '#DEE2E6', // สีขอบปุ่มรอง
+        primary: '#0D6EFD',
         surface: '#FFFFFF',
         textPrimary: '#212529',
         textSecondary: '#6C757D',
@@ -167,10 +165,14 @@ function createShopCarousel(places, apiKey, hasNextPage) {
             type: 'bubble',
             hero: { type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover', backgroundColor: '#eeeeee' },
             body: {
-                type: 'box', layout: 'vertical', paddingAll: '20px', spacing: 'md',
+                type: 'box',
+                layout: 'vertical',
+                paddingAll: '20px',
+                spacing: 'md',
                 contents: [
                     { type: 'text', text: name, weight: 'bold', size: 'xl', wrap: true, color: theme.textPrimary },
-                    { type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
+                    {
+                        type: 'box', layout: 'baseline', margin: 'md', spacing: 'sm',
                         contents: [
                             { type: 'icon', url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png', size: 'sm' },
                             { type: 'text', text: ratingText, size: 'sm', color: theme.textSecondary },
@@ -179,55 +181,59 @@ function createShopCarousel(places, apiKey, hasNextPage) {
                     { type: 'text', text: address, wrap: true, size: 'sm', color: theme.textSecondary, margin: 'lg' }
                 ]
             },
-            // --- VVVVVV START: ส่วน Footer ที่ใช้ Custom Buttons VVVVVV ---
             footer: {
                 type: 'box',
                 layout: 'vertical',
                 spacing: 'sm',
                 paddingAll: '20px',
                 contents: [
-                    // <<< ปุ่ม "ดูบนแผนที่" (Custom สีน้ำเงิน) >>>
                     {
-                        type: 'box',
-                        layout: 'vertical',
-                        backgroundColor: theme.primary,
-                        cornerRadius: 'md',
-                        paddingAll: 'md',
-                        justifyContent: 'center',
-                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl },
-                        contents: [
-                            { type: 'text', text: 'ดูบนแผนที่', color: theme.surface, align: 'center', weight: 'bold', size: 'sm' }
-                        ]
+                        type: 'button',
+                        style: 'primary',
+                        height: 'sm',
+                        action: { type: 'uri', label: 'ดูบนแผนที่', uri: gmapsUrl }
                     },
-                    // <<< ปุ่ม "ร้านโปรด" และ "ดูภายหลัง" (Custom สีเทา) >>>
                     {
-                        type: 'box',
-                        layout: 'horizontal',
-                        spacing: 'sm',
-                        margin: 'sm',
-                        contents: [
-                            {
-                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: theme.secondaryBg, cornerRadius: 'md',
-                                paddingAll: 'md', justifyContent: 'center', borderWidth: '1px', borderColor: theme.secondaryBorder,
-                                action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` },
-                                contents: [{ type: 'text', text: 'ร้านโปรด', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
-                            },
-                             {
-                                type: 'box', layout: 'vertical', flex: 1, backgroundColor: theme.secondaryBg, cornerRadius: 'md',
-                                paddingAll: 'md', justifyContent: 'center', borderWidth: '1px', borderColor: theme.secondaryBorder,
-                                action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` },
-                                contents: [{ type: 'text', text: 'ดูภายหลัง', color: theme.textPrimary, align: 'center', weight: 'bold', size: 'sm' }]
-                            }
-                        ]
+                        type: 'button',
+                        style: 'secondary',
+                        height: 'sm',
+                        action: { type: 'postback', label: 'ร้านโปรด', data: `action=add_favorite&shop_id=${placeId}` }
+                    },
+                    {
+                        type: 'button',
+                        style: 'secondary',
+                        height: 'sm',
+                        action: { type: 'postback', label: 'ดูภายหลัง', data: `action=add_watch_later&shop_id=${placeId}` }
                     }
                 ]
             }
-            // --- ^^^^^^ END: ส่วน Footer ที่ใช้ Custom Buttons ^^^^^^ ---
         };
     }).filter(bubble => bubble !== null);
 
-    if (bubbles.length === 0) { /* ... (เหมือนเดิม) ... */ }
-    if (hasNextPage) { /* ... (เหมือนเดิม) ... */ }
+    if (bubbles.length === 0) {
+        return { type: 'text', text: 'ขออภัย มีข้อผิดพลาดในการแสดงผลข้อมูลร้านค้า' };
+    }
+
+    if (hasNextPage) {
+        const loadMoreBubble = {
+            type: 'bubble',
+            body: {
+                type: 'box',
+                layout: 'vertical',
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingAll: '20px',
+                contents: [{
+                    type: 'button',
+                    style: 'link',
+                    height: 'sm',
+                    color: theme.primary,
+                    action: { type: 'postback', label: 'แสดงเพิ่มเติม', data: 'action=next_page' }
+                }]
+            }
+        };
+        bubbles.push(loadMoreBubble);
+    }
     
     return { type: 'flex', altText: 'ผลการค้นหาร้านค้า', contents: { type: 'carousel', contents: bubbles } };
 }
@@ -260,13 +266,22 @@ async function callGemini(prompt) {
 }
 
 // ----- 3. WEBHOOK ENDPOINT -----
-app.get('/callback', (req, res) => { res.status(200).send('OK'); });
+app.post('/webhook', line.middleware(config), async (req, res) => {
+    try {
+        const events = req.body.events;
 
-app.post('/callback', line.middleware(config), (req, res) => {
-    Promise
-        .all(req.body.events.map(handleEvent))
-        .then((result) => res.json(result))
-        .catch((err) => { console.error(err); res.status(500).end(); });
+        // ตรวจสอบว่า events มีไหม
+        if (!events || events.length === 0) {
+            return res.status(200).send("No events");
+        }
+
+        // รอการตอบสนองทั้งหมดก่อนส่งกลับ
+        const results = await Promise.all(events.map(handleEvent));
+        res.status(200).json(results);
+    } catch (err) {
+        console.error("Webhook error:", err);
+        res.status(500).end();
+    }
 });
 
 
