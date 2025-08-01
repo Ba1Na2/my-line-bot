@@ -22,7 +22,6 @@ const client = new line.Client(config);
 console.log("--- Checking for key files ---");
 const serviceAccountPath = './serviceAccountKey.json';
 const dialogflowKeyPath = './dialogflow-key.json';
-
 console.log(`Does ${serviceAccountPath} exist? :`, fs.existsSync(serviceAccountPath));
 console.log(`Does ${dialogflowKeyPath} exist? :`, fs.existsSync(dialogflowKeyPath));
 console.log("------------------------------");
@@ -33,12 +32,8 @@ if (firebase.apps.length === 0) {
         credential: firebase.credential.cert(serviceAccount)
     });
 }
-
-
 const db = firebase.firestore();
-
 const googleMapsClient = new Client({});
-
 const DIALOGFLOW_PROJECT_ID = 'linebot-mrt';
 const DIALOGFLOW_KEY_FILE = './dialogflow-key.json';
 const sessionClient = new dialogflow.SessionsClient({
@@ -49,9 +44,99 @@ const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" 
 
 
 const app = express();
+
+// ----- 3. WEBHOOK ENDPOINT -----
+
 app.use(express.static('public'));
+
+app.post('/callback', line.middleware(config), (req, res) => {
+    Promise
+        .all(req.body.events.map(handleEvent))
+        .then((result) => res.json(result))
+        .catch((err) => { console.error(err); res.status(500).end(); });
+});
+
 app.use(express.json()); 
 
+app.get('/get-saved-shops', async (req, res) => {
+    try {
+        const { userId, type } = req.query; 
+        
+        if (!userId || !type) {
+            return res.status(400).json({ error: 'Missing userId or type' });
+        }
+        
+        // ใช้ Syntax ของ Firebase Admin SDK
+        const collectionName = type;
+        const savedRef = db.collection('users').doc(userId).collection(collectionName);
+        const query = savedRef.orderBy("addedAt", "desc");
+        const savedSnapshot = await query.get();
+
+        if (savedSnapshot.empty) {
+            return res.json({ shops: [] }); 
+        }
+
+        const shopPromises = savedSnapshot.docs.map(docSnapshot => {
+            const shopId = docSnapshot.id;
+            // ใช้ Syntax ของ Firebase Admin SDK
+            return db.collection("shops").doc(shopId).get();
+        });
+
+        const shopDocs = await Promise.all(shopPromises);
+        
+        const shopsData = shopDocs
+            .filter(doc => doc.exists)
+            .map(doc => {
+                const shopData = doc.data();
+                const apiKey = process.env.GOOGLE_API_KEY; 
+                let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
+                if (shopData.photos && shopData.photos.length > 0) {
+                    imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${shopData.photos[0].photo_reference}&key=${apiKey}`;
+                }
+                return {
+                    id: doc.id,
+                    name: shopData.name,
+                    address: shopData.vicinity,
+                    imageUrl: imageUrl,
+                };
+            });
+
+        res.json({ shops: shopsData });
+
+    } catch (error) {
+        console.error('Error fetching saved shops:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.post('/delete-saved-shop', async (req, res) => {
+    try {
+        // รับข้อมูลที่จำเป็นจากหน้าเว็บ
+        const { userId, shopId, type } = req.body;
+
+        if (!userId || !shopId || !type) {
+            return res.status(400).json({ success: false, error: 'Missing required data' });
+        }
+        
+        // กำหนด collection ที่จะลบ (favorites หรือ watch_later)
+        const collectionName = type;
+        
+        // สร้าง reference ไปยัง document ที่ต้องการลบ
+        const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
+
+        // สั่งลบ!
+        await docRef.delete();
+
+        console.log(`Deleted shop ${shopId} from ${type} for user ${userId}`);
+        
+        // ส่งข้อความยืนยันกลับไปว่าลบสำเร็จแล้ว
+        res.status(200).json({ success: true, message: 'Shop deleted successfully' });
+
+    } catch (error) {
+        console.error('Error deleting shop:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+});
 
 // ----- 2. DATA & HELPER FUNCTIONS -----
 const MRT_BLUE_LINE_STATIONS = {
@@ -265,105 +350,7 @@ async function callGemini(prompt) {
     }
 }
 
-// ----- 3. WEBHOOK ENDPOINT -----
-app.post('/webhook', line.middleware(config), async (req, res) => {
-    try {
-        const events = req.body.events;
 
-        // ตรวจสอบว่า events มีไหม
-        if (!events || events.length === 0) {
-            return res.status(200).send("No events");
-        }
-
-        // รอการตอบสนองทั้งหมดก่อนส่งกลับ
-        const results = await Promise.all(events.map(handleEvent));
-        res.status(200).json(results);
-    } catch (err) {
-        console.error("Webhook error:", err);
-        res.status(500).end();
-    }
-});
-
-
-app.get('/get-saved-shops', async (req, res) => {
-    try {
-        const { userId, type } = req.query; 
-        
-        if (!userId || !type) {
-            return res.status(400).json({ error: 'Missing userId or type' });
-        }
-        
-        // ใช้ Syntax ของ Firebase Admin SDK
-        const collectionName = type;
-        const savedRef = db.collection('users').doc(userId).collection(collectionName);
-        const query = savedRef.orderBy("addedAt", "desc");
-        const savedSnapshot = await query.get();
-
-        if (savedSnapshot.empty) {
-            return res.json({ shops: [] }); 
-        }
-
-        const shopPromises = savedSnapshot.docs.map(docSnapshot => {
-            const shopId = docSnapshot.id;
-            // ใช้ Syntax ของ Firebase Admin SDK
-            return db.collection("shops").doc(shopId).get();
-        });
-
-        const shopDocs = await Promise.all(shopPromises);
-        
-        const shopsData = shopDocs
-            .filter(doc => doc.exists)
-            .map(doc => {
-                const shopData = doc.data();
-                const apiKey = process.env.GOOGLE_API_KEY; 
-                let imageUrl = "https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image.png";
-                if (shopData.photos && shopData.photos.length > 0) {
-                    imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${shopData.photos[0].photo_reference}&key=${apiKey}`;
-                }
-                return {
-                    id: doc.id,
-                    name: shopData.name,
-                    address: shopData.vicinity,
-                    imageUrl: imageUrl,
-                };
-            });
-
-        res.json({ shops: shopsData });
-
-    } catch (error) {
-        console.error('Error fetching saved shops:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-app.post('/delete-saved-shop', async (req, res) => {
-    try {
-        // รับข้อมูลที่จำเป็นจากหน้าเว็บ
-        const { userId, shopId, type } = req.body;
-
-        if (!userId || !shopId || !type) {
-            return res.status(400).json({ success: false, error: 'Missing required data' });
-        }
-        
-        // กำหนด collection ที่จะลบ (favorites หรือ watch_later)
-        const collectionName = type;
-        
-        // สร้าง reference ไปยัง document ที่ต้องการลบ
-        const docRef = db.collection('users').doc(userId).collection(collectionName).doc(shopId);
-
-        // สั่งลบ!
-        await docRef.delete();
-
-        console.log(`Deleted shop ${shopId} from ${type} for user ${userId}`);
-        
-        // ส่งข้อความยืนยันกลับไปว่าลบสำเร็จแล้ว
-        res.status(200).json({ success: true, message: 'Shop deleted successfully' });
-
-    } catch (error) {
-        console.error('Error deleting shop:', error);
-        res.status(500).json({ success: false, error: 'Internal Server Error' });
-    }
-});
 
 // ----- 4. EVENT HANDLER -----
 const handleEvent = async (event) => {
