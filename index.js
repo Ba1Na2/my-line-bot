@@ -47,7 +47,6 @@ const app = express();
 
 // ----- 3. WEBHOOK ENDPOINT -----
 
-app.use(express.static('public'));
 
 app.post('/callback', line.middleware(config), (req, res) => {
     Promise
@@ -55,6 +54,8 @@ app.post('/callback', line.middleware(config), (req, res) => {
         .then((result) => res.json(result))
         .catch((err) => { console.error(err); res.status(500).end(); });
 });
+
+app.use(express.static('public'));
 
 app.use(express.json()); 
 
